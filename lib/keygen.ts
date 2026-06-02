@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-const SALT = 'PathologyLISSecretKey@2026-SuperSecureSalt';
+const SALT = process.env.LICENSE_SECRET_SALT || 'PathologyLISSecretKey@2026-SuperSecureSalt';
 
 // Derive a 32-byte key from the salt key using SHA-256
 const KEY = crypto.createHash('sha256').update(SALT).digest();
