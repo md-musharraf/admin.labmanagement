@@ -201,10 +201,10 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Helper: check licensing status relative to current local time (2026-06-01)
+  // Helper: check licensing status relative to current local time
   const getLicenseStatus = (expiryDateStr: string) => {
     const expiry = new Date(expiryDateStr);
-    const now = new Date('2026-06-01T16:04:55+05:30'); // Fixed local time relative to prompt context
+    const now = new Date();
     const diffTime = expiry.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
