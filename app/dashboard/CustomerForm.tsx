@@ -62,6 +62,16 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>, nextFieldId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const nextElement = document.getElementById(nextFieldId);
+      if (nextElement) {
+        nextElement.focus();
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end font-sans">
       {/* Backdrop */}
@@ -104,9 +114,11 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 Laboratory Name
               </label>
               <input
+                id="labName"
                 type="text"
                 value={labName}
                 onChange={(e) => setLabName(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, 'ownerName')}
                 placeholder="e.g. Apex Diagnostics Lab"
                 className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
                 disabled={loading}
@@ -120,9 +132,11 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 Lab Director / Owner
               </label>
               <input
+                id="ownerName"
                 type="text"
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, 'phone')}
                 placeholder="e.g. Dr. Sarah Connor"
                 className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
                 disabled={loading}
@@ -136,11 +150,13 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 Contact Phone
               </label>
               <input
+                id="phone"
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, 'machineId')}
                 placeholder="e.g. +1 (555) 019-2834"
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                 disabled={loading}
               />
             </div>
@@ -152,11 +168,13 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 Hardware Machine ID
               </label>
               <input
+                id="machineId"
                 type="text"
                 value={machineId}
                 onChange={(e) => setMachineId(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, 'planDuration')}
                 placeholder="e.g. LIS-MAC-9872X"
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-violet-500/80 focus:ring-1 focus:ring-violet-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-violet-500/80 focus:ring-1 focus:ring-violet-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                 disabled={loading}
               />
             </div>
@@ -168,8 +186,15 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 License Plan Duration
               </label>
               <select
+                id="planDuration"
                 value={planDuration}
                 onChange={(e) => setPlanDuration(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
                 className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm transition-all"
                 disabled={loading}
               >

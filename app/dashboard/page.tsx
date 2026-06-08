@@ -225,6 +225,16 @@ export default function DashboardPage() {
     }
   };
 
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, nextFieldId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const nextElement = document.getElementById(nextFieldId);
+      if (nextElement) {
+        nextElement.focus();
+      }
+    }
+  };
+
   const handleVerifyKey = async (customer: Customer) => {
     setVerifyKeyData({
       customer,
@@ -698,9 +708,11 @@ export default function DashboardPage() {
                     Release Version
                   </label>
                   <input
+                    id="updateVersion"
                     type="text"
                     value={updateVersion}
                     onChange={(e) => setUpdateVersion(e.target.value)}
+                    onKeyDown={(e) => handleInputKeyDown(e, 'updateTitle')}
                     placeholder="e.g. 1.1.0"
                     className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                   />
@@ -711,9 +723,11 @@ export default function DashboardPage() {
                     Release Title
                   </label>
                   <input
+                    id="updateTitle"
                     type="text"
                     value={updateTitle}
                     onChange={(e) => setUpdateTitle(e.target.value)}
+                    onKeyDown={(e) => handleInputKeyDown(e, 'updateNotes')}
                     placeholder="e.g. NABL Compliance Pack & Auto-Formula Updates"
                     className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                   />
@@ -724,6 +738,7 @@ export default function DashboardPage() {
                     Release Notes (What's new?)
                   </label>
                   <textarea
+                    id="updateNotes"
                     rows={4}
                     value={updateNotes}
                     onChange={(e) => setUpdateNotes(e.target.value)}
@@ -738,9 +753,16 @@ export default function DashboardPage() {
                   </label>
                   <div className="relative">
                     <input
+                      id="updateUrl"
                       type="text"
                       value={updateUrl}
                       onChange={(e) => setUpdateUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handlePushUpdate(e);
+                        }
+                      }}
                       placeholder="https://example.com/downloads/lis-setup.exe"
                       className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 pl-9 pr-4 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                     />
