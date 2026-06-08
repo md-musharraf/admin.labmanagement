@@ -75,11 +75,15 @@ export async function fetchCustomers() {
       return { error: error.message };
     }
 
-    // Map to guarantee status is always present
-    const mapped = (data || []).map((c: any) => ({
-      ...c,
-      status: c.status || 'ACTIVE'
-    })) as Customer[];
+    // Map to guarantee status is always present (merging local fileDb status for Supabase backup sync)
+    const fileList = readCustomers();
+    const mapped = (data || []).map((c: any) => {
+      const fileCust = fileList.find(fc => fc.id === c.id || fc.machine_id === c.machine_id);
+      return {
+        ...c,
+        status: c.status || fileCust?.status || 'ACTIVE'
+      };
+    }) as Customer[];
 
     return { success: true, data: mapped, isDemo: false };
   } catch (err: any) {
@@ -272,6 +276,31 @@ export async function updateCustomerStatus(id: string, status: 'ACTIVE' | 'PAUSE
   }
 
   try {
+    // Always update local fileDb status for robust synchronization
+    const list = readCustomers();
+    const index = list.findIndex((c) => c.id === id);
+    if (index !== -1) {
+      list[index].status = status;
+      writeCustomers(list);
+    } else {
+      // Find details from Supabase to store locally in fileDb fallback
+      const { data: dbCust } = await supabase.from('customers').select('*').eq('id', id).maybeSingle();
+      if (dbCust) {
+        list.push({
+          id: dbCust.id,
+          created_at: dbCust.created_at,
+          lab_name: dbCust.lab_name,
+          owner_name: dbCust.owner_name,
+          phone: dbCust.phone,
+          machine_id: dbCust.machine_id,
+          expiry_date: dbCust.expiry_date,
+          license_key: dbCust.license_key,
+          status: status
+        });
+        writeCustomers(list);
+      }
+    }
+
     const { error } = await supabase
       .from('customers')
       .update({ status: status })
@@ -279,15 +308,9 @@ export async function updateCustomerStatus(id: string, status: 'ACTIVE' | 'PAUSE
 
     if (error) {
       console.error('Supabase error updating status:', error);
-      // Suppress missing column error for demo robustness
-      if (error.message.includes('column') || error.message.includes('status')) {
-        console.warn('Supabase customers table lacks status column. Saving status locally in fileDb fallback.');
-        const list = readCustomers();
-        const index = list.findIndex((c) => c.id === id);
-        if (index !== -1) {
-          list[index] = { ...list[index], status };
-          writeCustomers(list);
-        }
+      // Suppress missing column error as we have saved it locally in fileDb successfully
+      if (error.message.includes('column') || error.message.includes('status') || error.message.includes('does not exist')) {
+        console.warn('Supabase customers table lacks status column. Saving status locally in fileDb fallback instead.');
         revalidatePath('/dashboard');
         return { success: true, warning: 'Lacks database column, updated locally', isDemo: false };
       }
