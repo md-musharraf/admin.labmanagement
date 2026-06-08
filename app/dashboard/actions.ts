@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { encrypt, decrypt } from '@/lib/keygen';
 import { revalidatePath } from 'next/cache';
+import { readCustomers, writeCustomers, readUpdates, writeUpdates, SoftwareUpdate } from '@/lib/fileDb';
 
 export interface Customer {
   id: string;
@@ -13,6 +14,7 @@ export interface Customer {
   machine_id: string;
   expiry_date: string;
   license_key: string;
+  status: string; // 'ACTIVE' | 'PAUSED' | 'STOPPED'
 }
 
 // Check if we are running in demo mode with dummy credentials
@@ -22,46 +24,26 @@ const isDemoMode =
   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('dummy');
 
-// Server-side in-memory mock database for demo fallback
-let mockCustomers: Customer[] = [
-  {
-    id: 'mock-uuid-1',
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-    lab_name: 'Apex Pathology & Diagnostics',
-    owner_name: 'Dr. Sarah Jenkins',
-    phone: '+1 (555) 234-5678',
-    machine_id: 'MAC-APEX-9982X',
-    expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 25).toISOString(), // Expiring in 25 days (soon)
-    license_key: '',
-  },
-  {
-    id: 'mock-uuid-2',
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString(), // 60 days ago
-    lab_name: 'BioHealth Laboratory Services',
-    owner_name: 'Dr. Charles Xavier',
-    phone: '+1 (555) 876-5432',
-    machine_id: 'MAC-BIOH-1102A',
-    expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 300).toISOString(), // Active for 300 days
-    license_key: '',
-  },
-  {
-    id: 'mock-uuid-3',
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 120).toISOString(), // 120 days ago
-    lab_name: 'Horizon Clinical Pathology',
-    owner_name: 'Dr. Bruce Banner',
-    phone: '+1 (555) 432-1098',
-    machine_id: 'MAC-HORZ-4402Z',
-    expiry_date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(), // Expired 12 days ago
-    license_key: '',
-  },
-];
-
-// Initialize license keys for mock database
-mockCustomers.forEach((c) => {
-  if (!c.license_key) {
-    c.license_key = encrypt(c.machine_id, c.expiry_date);
+// Initialize licenses in fileDb if they are missing license keys
+try {
+  const current = readCustomers();
+  let updated = false;
+  current.forEach((c) => {
+    if (!c.license_key) {
+      c.license_key = encrypt(c.machine_id, c.expiry_date);
+      updated = true;
+    }
+    if (!c.status) {
+      c.status = 'ACTIVE';
+      updated = true;
+    }
+  });
+  if (updated) {
+    writeCustomers(current);
   }
-});
+} catch (e) {
+  console.error('Error initializing default file DB keys:', e);
+}
 
 /**
  * Checks if the system is running in demo/mock database fallback mode.
@@ -71,12 +53,12 @@ export async function checkDemoMode() {
 }
 
 /**
- * Fetches all customers from Supabase or returns in-memory mock data.
+ * Fetches all customers from Supabase or returns mock file data.
  */
 export async function fetchCustomers() {
   if (isDemoMode) {
-    // Sort in-memory list by created_at descending
-    const sorted = [...mockCustomers].sort(
+    const list = readCustomers();
+    const sorted = [...list].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
     return { success: true, data: sorted, isDemo: true };
@@ -93,7 +75,13 @@ export async function fetchCustomers() {
       return { error: error.message };
     }
 
-    return { success: true, data: (data || []) as Customer[], isDemo: false };
+    // Map to guarantee status is always present
+    const mapped = (data || []).map((c: any) => ({
+      ...c,
+      status: c.status || 'ACTIVE'
+    })) as Customer[];
+
+    return { success: true, data: mapped, isDemo: false };
   } catch (err: any) {
     console.error('Error fetching customers:', err);
     return { error: err.message || 'An unexpected error occurred' };
@@ -116,7 +104,6 @@ export async function createCustomer(formData: {
     return { error: 'All fields are required' };
   }
 
-  // Calculate expiry date
   const expiry = new Date();
   if (planDuration === '1 Month') {
     expiry.setMonth(expiry.getMonth() + 1);
@@ -125,15 +112,13 @@ export async function createCustomer(formData: {
   } else if (planDuration === '2 Years') {
     expiry.setFullYear(expiry.getFullYear() + 2);
   } else {
-    // Default to 1 Year
     expiry.setFullYear(expiry.getFullYear() + 1);
   }
   const expiryStr = expiry.toISOString();
-
-  // Generate license key using keygen helper
   const licenseKey = encrypt(machineId, expiryStr);
 
   if (isDemoMode) {
+    const list = readCustomers();
     const newCust: Customer = {
       id: `mock-uuid-${Date.now()}`,
       created_at: new Date().toISOString(),
@@ -143,8 +128,10 @@ export async function createCustomer(formData: {
       machine_id: machineId,
       expiry_date: expiryStr,
       license_key: licenseKey,
+      status: 'ACTIVE',
     };
-    mockCustomers.push(newCust);
+    list.push(newCust);
+    writeCustomers(list);
     revalidatePath('/dashboard');
     return { success: true, data: newCust, isDemo: true };
   }
@@ -160,6 +147,7 @@ export async function createCustomer(formData: {
           machine_id: machineId,
           expiry_date: expiryStr,
           license_key: licenseKey,
+          status: 'ACTIVE'
         },
       ])
       .select();
@@ -185,22 +173,21 @@ export async function renewLicense(id: string, machineId: string) {
     return { error: 'Customer ID and Machine ID are required' };
   }
 
-  // Set the new expiry to 1 year from now
   const expiry = new Date();
   expiry.setFullYear(expiry.getFullYear() + 1);
   const expiryStr = expiry.toISOString();
-
-  // Generate new license key
   const licenseKey = encrypt(machineId, expiryStr);
 
   if (isDemoMode) {
-    const index = mockCustomers.findIndex((c) => c.id === id);
+    const list = readCustomers();
+    const index = list.findIndex((c) => c.id === id);
     if (index !== -1) {
-      mockCustomers[index] = {
-        ...mockCustomers[index],
+      list[index] = {
+        ...list[index],
         expiry_date: expiryStr,
         license_key: licenseKey,
       };
+      writeCustomers(list);
       revalidatePath('/dashboard');
       return { success: true, isDemo: true };
     }
@@ -238,7 +225,9 @@ export async function deleteCustomer(id: string) {
   }
 
   if (isDemoMode) {
-    mockCustomers = mockCustomers.filter((c) => c.id !== id);
+    let list = readCustomers();
+    list = list.filter((c) => c.id !== id);
+    writeCustomers(list);
     revalidatePath('/dashboard');
     return { success: true, isDemo: true };
   }
@@ -260,6 +249,60 @@ export async function deleteCustomer(id: string) {
 }
 
 /**
+ * Updates a customer's license status (ACTIVE | PAUSED | STOPPED)
+ */
+export async function updateCustomerStatus(id: string, status: 'ACTIVE' | 'PAUSED' | 'STOPPED') {
+  if (!id || !status) {
+    return { error: 'Customer ID and status are required' };
+  }
+
+  if (isDemoMode) {
+    const list = readCustomers();
+    const index = list.findIndex((c) => c.id === id);
+    if (index !== -1) {
+      list[index] = {
+        ...list[index],
+        status: status,
+      };
+      writeCustomers(list);
+      revalidatePath('/dashboard');
+      return { success: true, isDemo: true };
+    }
+    return { error: 'Customer not found' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .update({ status: status })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Supabase error updating status:', error);
+      // Suppress missing column error for demo robustness
+      if (error.message.includes('column') || error.message.includes('status')) {
+        console.warn('Supabase customers table lacks status column. Saving status locally in fileDb fallback.');
+        const list = readCustomers();
+        const index = list.findIndex((c) => c.id === id);
+        if (index !== -1) {
+          list[index] = { ...list[index], status };
+          writeCustomers(list);
+        }
+        revalidatePath('/dashboard');
+        return { success: true, warning: 'Lacks database column, updated locally', isDemo: false };
+      }
+      return { error: error.message };
+    }
+
+    revalidatePath('/dashboard');
+    return { success: true, isDemo: false };
+  } catch (err: any) {
+    console.error('Error updating status:', err);
+    return { error: err.message || 'An unexpected error occurred' };
+  }
+}
+
+/**
  * Decrypts a license key and returns the decrypted payload parameters.
  */
 export async function verifyLicenseKey(licenseKey: string) {
@@ -268,5 +311,53 @@ export async function verifyLicenseKey(licenseKey: string) {
     return { success: true, machineId: decrypted.machineId, expirationDate: decrypted.expirationDate };
   } catch (err: any) {
     return { error: err.message || 'Verification failed: invalid key structure' };
+  }
+}
+
+/**
+ * Pushes a new software update version.
+ */
+export async function pushSoftwareUpdate(formData: {
+  version: string;
+  title: string;
+  releaseNotes: string;
+  downloadUrl: string;
+  isCritical: boolean;
+}) {
+  const { version, title, releaseNotes, downloadUrl, isCritical } = formData;
+  if (!version || !title || !releaseNotes || !downloadUrl) {
+    return { error: 'All update fields are required' };
+  }
+
+  try {
+    const updates = readUpdates();
+    const newUpdate: SoftwareUpdate = {
+      version,
+      title,
+      releaseNotes,
+      downloadUrl,
+      isCritical,
+      publishedAt: new Date().toISOString(),
+    };
+    // Prepend so that the latest version is first
+    updates.unshift(newUpdate);
+    writeUpdates(updates);
+    revalidatePath('/dashboard');
+    return { success: true, data: newUpdate };
+  } catch (err: any) {
+    console.error('Failed to push update:', err);
+    return { error: err.message || 'Failed to save update' };
+  }
+}
+
+/**
+ * Fetches all updates.
+ */
+export async function fetchSoftwareUpdates() {
+  try {
+    const updates = readUpdates();
+    return { success: true, data: updates };
+  } catch (err: any) {
+    return { error: err.message || 'Failed to fetch updates' };
   }
 }

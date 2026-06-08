@@ -9,6 +9,9 @@ import {
   deleteCustomer, 
   verifyLicenseKey, 
   checkDemoMode,
+  updateCustomerStatus,
+  pushSoftwareUpdate,
+  fetchSoftwareUpdates,
   Customer 
 } from './actions';
 import CustomerForm from './CustomerForm';
@@ -33,11 +36,21 @@ import {
   ShieldAlert, 
   CheckCircle,
   Database,
-  Info
+  Info,
+  Pause,
+  StopCircle,
+  Play,
+  ArrowUpCircle,
+  History,
+  Sparkles,
+  Link as LinkIcon
 } from 'lucide-react';
+import { SoftwareUpdate } from '@/lib/fileDb';
 
 export default function DashboardPage() {
+  const [activePanel, setActivePanel] = useState<'labs' | 'updates'>('labs');
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [updates, setUpdates] = useState<SoftwareUpdate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
@@ -55,6 +68,16 @@ export default function DashboardPage() {
 
   // Copy success indicator state (tracks ID of copied customer)
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Software Update Form States
+  const [updateVersion, setUpdateVersion] = useState('');
+  const [updateTitle, setUpdateTitle] = useState('');
+  const [updateNotes, setUpdateNotes] = useState('');
+  const [updateUrl, setUpdateUrl] = useState('');
+  const [updateCritical, setUpdateCritical] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   // Cryptographic Verification Modal States
   const [verifyKeyData, setVerifyKeyData] = useState<{
@@ -86,6 +109,11 @@ export default function DashboardPage() {
         setError(res.error);
       } else if (res.data) {
         setCustomers(res.data);
+      }
+
+      const updatesRes = await fetchSoftwareUpdates();
+      if (updatesRes.success && updatesRes.data) {
+        setUpdates(updatesRes.data);
       }
     } catch (err: any) {
       console.error(err);
@@ -143,13 +171,66 @@ export default function DashboardPage() {
     }
   };
 
+  const handleStatusChange = async (id: string, newStatus: 'ACTIVE' | 'PAUSED' | 'STOPPED') => {
+    try {
+      setLoading(true);
+      const res = await updateCustomerStatus(id, newStatus);
+      if (res.error) {
+        alert(`Failed to update customer status: ${res.error}`);
+      } else {
+        await loadData();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePushUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!updateVersion || !updateTitle || !updateNotes || !updateUrl) {
+      setUpdateError('Please fill in all update fields.');
+      return;
+    }
+
+    setUpdateLoading(true);
+    setUpdateError(null);
+    setUpdateSuccess(false);
+
+    try {
+      const res = await pushSoftwareUpdate({
+        version: updateVersion.trim(),
+        title: updateTitle.trim(),
+        releaseNotes: updateNotes.trim(),
+        downloadUrl: updateUrl.trim(),
+        isCritical: updateCritical
+      });
+
+      if (res.error) {
+        setUpdateError(res.error);
+      } else {
+        setUpdateSuccess(true);
+        setUpdateVersion('');
+        setUpdateTitle('');
+        setUpdateNotes('');
+        setUpdateUrl('');
+        setUpdateCritical(false);
+        await loadData();
+      }
+    } catch (err: any) {
+      setUpdateError(err.message || 'Failed to push update.');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   const handleVerifyKey = async (customer: Customer) => {
     setVerifyKeyData({
       customer,
       decrypting: true
     });
 
-    // Artificially delay slightly (400ms) to show the decryption processing beautifully
     setTimeout(async () => {
       try {
         const res = await verifyLicenseKey(customer.license_key);
@@ -217,11 +298,22 @@ export default function DashboardPage() {
     return { label: 'Active', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', raw: 'Active' };
   };
 
+  const getAdminStatusDetails = (status: string) => {
+    switch (status) {
+      case 'PAUSED':
+        return { label: 'Paused by Admin', color: 'bg-orange-500/15 text-orange-400 border border-orange-500/25' };
+      case 'STOPPED':
+        return { label: 'Stopped / Revoked', color: 'bg-red-500/15 text-red-400 border border-red-500/25' };
+      default:
+        return { label: 'Online Active', color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' };
+    }
+  };
+
   // Statistics calculation
   const totalLabs = customers.length;
-  const activeLicenses = customers.filter(c => getLicenseStatus(c.expiry_date).raw === 'Active').length;
-  const expiredLicenses = customers.filter(c => getLicenseStatus(c.expiry_date).raw === 'Expired').length;
-  const expiringSoonLicenses = customers.filter(c => getLicenseStatus(c.expiry_date).raw === 'Expiring Soon').length;
+  const activeLicenses = customers.filter(c => getLicenseStatus(c.expiry_date).raw === 'Active' && c.status !== 'STOPPED' && c.status !== 'PAUSED').length;
+  const expiredLicenses = customers.filter(c => getLicenseStatus(c.expiry_date).raw === 'Expired' || c.status === 'STOPPED').length;
+  const expiringSoonLicenses = customers.filter(c => getLicenseStatus(c.expiry_date).raw === 'Expiring Soon' && c.status === 'ACTIVE').length;
 
   // Filter & Search Logic
   const filteredCustomers = customers.filter(c => {
@@ -296,7 +388,7 @@ export default function DashboardPage() {
             <Info className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
             <div>
               <span className="font-bold">Database Fallback Activated: </span>
-              The portal is using a secure server-side in-memory mock database because the Supabase configuration variables are not set or contain template values. You can fully test adding, renewing, deleting, and cryptographically verifying license keys!
+              The portal is using a secure local file database (`customers_db.json` & `updates_db.json`) because Supabase credentials are in template mode. Remote status API check and pushes are fully operational!
             </div>
           </div>
         )}
@@ -318,9 +410,9 @@ export default function DashboardPage() {
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <CheckCircle className="h-20 w-20 text-emerald-500" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Active Licenses</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Authorized Active</p>
             <p className="text-3xl font-extrabold mt-2 text-emerald-400">{activeLicenses}</p>
-            <div className="mt-2 text-[10px] text-emerald-500/60 font-medium">Valid credentials authorized</div>
+            <div className="mt-2 text-[10px] text-emerald-500/60 font-medium">Valid credentials running</div>
           </div>
 
           {/* Stat 3: Expiring Soon */}
@@ -338,201 +430,436 @@ export default function DashboardPage() {
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <ShieldAlert className="h-20 w-20 text-rose-500" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Expired Licenses</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Blocked / Expired</p>
             <p className="text-3xl font-extrabold mt-2 text-rose-400">{expiredLicenses}</p>
-            <div className="mt-2 text-[10px] text-rose-500/60 font-medium">Requires immediate renewal</div>
+            <div className="mt-2 text-[10px] text-rose-500/60 font-medium">Requires renewal or unlock</div>
           </div>
         </section>
 
-        {/* CONTROLS (Search & Filters) */}
-        <section className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
-          {/* Search bar */}
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Lab Name, Owner, Phone or Machine ID..."
-              className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/40 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner"
-            />
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-zinc-500" />
-            </div>
-          </div>
+        {/* Dynamic Panels Tab bar */}
+        <div className="flex border-b border-zinc-800 gap-6">
+          <button 
+            onClick={() => setActivePanel('labs')}
+            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer ${activePanel === 'labs' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <Cpu className="h-4 w-4" />
+            Registered Laboratories
+            {activePanel === 'labs' && (
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-emerald-500" />
+            )}
+          </button>
+          <button 
+            onClick={() => setActivePanel('updates')}
+            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer ${activePanel === 'updates' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <ArrowUpCircle className="h-4 w-4" />
+            Software Updates Manager
+            {activePanel === 'updates' && (
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-emerald-500" />
+            )}
+          </button>
+        </div>
 
-          {/* Filters & Add Customer CTA */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Filter Tabs */}
-            <div className="bg-zinc-900/60 p-1 rounded-xl border border-zinc-800/60 flex items-center">
-              {(['All', 'Active', 'Expiring Soon', 'Expired'] as const).map((tab) => (
+        {/* TAB CONTENT: LABS LIST */}
+        {activePanel === 'labs' && (
+          <div className="space-y-6">
+            {/* CONTROLS (Search & Filters) */}
+            <section className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+              <div className="relative flex-1 max-w-md">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by Lab Name, Owner, Phone or Machine ID..."
+                  className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/40 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-zinc-500" />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="bg-zinc-900/60 p-1 rounded-xl border border-zinc-800/60 flex items-center">
+                  {(['All', 'Active', 'Expiring Soon', 'Expired'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setStatusFilter(tab)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        statusFilter === tab 
+                          ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/5' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
                 <button
-                  key={tab}
-                  onClick={() => setStatusFilter(tab)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    statusFilter === tab 
-                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/5' 
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
-                  }`}
+                  onClick={() => setIsAddOpen(true)}
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-zinc-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/5 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  {tab}
+                  <Plus className="h-4.5 w-4.5" />
+                  Add Customer
                 </button>
-              ))}
-            </div>
+              </div>
+            </section>
 
-            {/* Add customer CTA */}
-            <button
-              onClick={() => setIsAddOpen(true)}
-              className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-zinc-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/5 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <Plus className="h-4.5 w-4.5" />
-              Add Customer
-            </button>
-          </div>
-        </section>
-
-        {/* CUSTOMERS TABLE */}
-        <section className="backdrop-blur-md bg-zinc-900/35 border border-zinc-800/80 rounded-2xl shadow-xl overflow-hidden">
-          {loading && customers.length === 0 ? (
-            <div className="p-16 flex flex-col items-center justify-center gap-4 text-zinc-400">
-              <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm font-semibold">Contacting registry database...</p>
-            </div>
-          ) : filteredCustomers.length === 0 ? (
-            <div className="p-16 text-center text-zinc-500 flex flex-col items-center justify-center gap-2">
-              <ShieldAlert className="h-10 w-10 text-zinc-650" />
-              <p className="font-bold text-zinc-400">No Customers Found</p>
-              <p className="text-xs">Adjust filters or search parameters, or register a new laboratory client.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-800/60 bg-zinc-900/10 text-zinc-400 text-[11px] font-bold uppercase tracking-wider">
-                    <th className="py-4 px-6">Laboratory & Owner</th>
-                    <th className="py-4 px-6">Contact Phone</th>
-                    <th className="py-4 px-6">Machine ID</th>
-                    <th className="py-4 px-6">Expiry Date</th>
-                    <th className="py-4 px-6">License Key</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/30 text-sm font-medium">
-                  {filteredCustomers.map((customer) => {
-                    const status = getLicenseStatus(customer.expiry_date);
-                    const isMasked = !unmaskedKeys[customer.id];
-                    const isCopied = copiedId === customer.id;
-
-                    return (
-                      <tr key={customer.id} className="hover:bg-zinc-900/20 transition-colors">
-                        {/* Lab name and Owner */}
-                        <td className="py-4 px-6">
-                          <div className="font-bold text-zinc-100">{customer.lab_name}</div>
-                          <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
-                            <User className="h-3 w-3" />
-                            {customer.owner_name}
-                          </div>
-                        </td>
-
-                        {/* Phone */}
-                        <td className="py-4 px-6 text-zinc-300">
-                          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                            <Phone className="h-3.5 w-3.5 text-zinc-500" />
-                            {customer.phone}
-                          </div>
-                        </td>
-
-                        {/* Machine ID */}
-                        <td className="py-4 px-6">
-                          <span className="font-mono text-xs px-2 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-zinc-400">
-                            {customer.machine_id}
-                          </span>
-                        </td>
-
-                        {/* Expiry date & status */}
-                        <td className="py-4 px-6">
-                          <div className="text-zinc-200 text-xs">
-                            {new Date(customer.expiry_date).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </div>
-                          <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded mt-1.5 ${status.color}`}>
-                            {status.label}
-                          </span>
-                        </td>
-
-                        {/* License Key Mask/Unmask, Copy, Verify */}
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-2">
-                            <div className="font-mono text-xs bg-zinc-950/80 border border-zinc-850 px-3 py-1.5 rounded-lg max-w-[160px] truncate text-zinc-500">
-                              {isMasked 
-                                ? `${customer.license_key.substring(0, 8)}••••••••${customer.license_key.substring(customer.license_key.length - 8)}`
-                                : customer.license_key
-                              }
-                            </div>
-                            
-                            {/* Toggle visibility */}
-                            <button
-                              onClick={() => toggleMask(customer.id)}
-                              title={isMasked ? "Show Key" : "Hide Key"}
-                              className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
-                            >
-                              {isMasked ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                            </button>
-
-                            {/* Copy button */}
-                            <button
-                              onClick={() => copyToClipboard(customer.license_key, customer.id)}
-                              title="Copy Key"
-                              className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
-                            >
-                              {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                            </button>
-
-                            {/* Cryptographic verify badge */}
-                            <button
-                              onClick={() => handleVerifyKey(customer)}
-                              title="Verify Cryptographic Key"
-                              className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer"
-                            >
-                              <ShieldCheck className="h-3 w-3" />
-                              Verify Key
-                            </button>
-                          </div>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Renew */}
-                            <button
-                              onClick={() => setRenewConfirmId(customer)}
-                              title="Renew License (+1 Year)"
-                              className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-emerald-500/40 text-zinc-400 hover:text-emerald-400 text-xs flex items-center gap-1 transition-all cursor-pointer"
-                            >
-                              <Calendar className="h-3.5 w-3.5" />
-                              Renew
-                            </button>
-
-                            {/* Delete */}
-                            <button
-                              onClick={() => setDeleteConfirmId(customer.id)}
-                              title="Delete Customer"
-                              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-rose-500/10 border border-zinc-800 hover:border-rose-500/20 text-zinc-400 hover:text-rose-450 transition-all cursor-pointer"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
+            {/* CUSTOMERS TABLE */}
+            <section className="backdrop-blur-md bg-zinc-900/35 border border-zinc-800/80 rounded-2xl shadow-xl overflow-hidden">
+              {loading && customers.length === 0 ? (
+                <div className="p-16 flex flex-col items-center justify-center gap-4 text-zinc-400">
+                  <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm font-semibold">Contacting registry database...</p>
+                </div>
+              ) : filteredCustomers.length === 0 ? (
+                <div className="p-16 text-center text-zinc-500 flex flex-col items-center justify-center gap-2">
+                  <ShieldAlert className="h-10 w-10 text-zinc-650" />
+                  <p className="font-bold text-zinc-400">No Customers Found</p>
+                  <p className="text-xs">Adjust filters or search parameters, or register a new laboratory client.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-800/60 bg-zinc-900/10 text-zinc-400 text-[11px] font-bold uppercase tracking-wider">
+                        <th className="py-4 px-6">Laboratory & Owner</th>
+                        <th className="py-4 px-6">Contact Phone</th>
+                        <th className="py-4 px-6">Machine ID</th>
+                        <th className="py-4 px-6">Expiry & Access Status</th>
+                        <th className="py-4 px-6">License Key</th>
+                        <th className="py-4 px-6 text-right">Actions</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800/30 text-sm font-medium">
+                      {filteredCustomers.map((customer) => {
+                        const status = getLicenseStatus(customer.expiry_date);
+                        const adminStatus = getAdminStatusDetails(customer.status);
+                        const isMasked = !unmaskedKeys[customer.id];
+                        const isCopied = copiedId === customer.id;
+
+                        return (
+                          <tr key={customer.id} className="hover:bg-zinc-900/20 transition-colors">
+                            <td className="py-4 px-6">
+                              <div className="font-bold text-zinc-100">{customer.lab_name}</div>
+                              <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
+                                <User className="h-3 w-3" />
+                                {customer.owner_name}
+                              </div>
+                            </td>
+
+                            <td className="py-4 px-6 text-zinc-300">
+                              <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                                <Phone className="h-3.5 w-3.5 text-zinc-500" />
+                                {customer.phone}
+                              </div>
+                            </td>
+
+                            <td className="py-4 px-6">
+                              <span className="font-mono text-xs px-2 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-zinc-400">
+                                {customer.machine_id}
+                              </span>
+                            </td>
+
+                            <td className="py-4 px-6">
+                              <div className="text-zinc-200 text-xs font-semibold">
+                                {new Date(customer.expiry_date).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${status.color}`}>
+                                  {status.label}
+                                </span>
+                                <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${adminStatus.color}`}>
+                                  {adminStatus.label}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td className="py-4 px-6">
+                              <div className="flex items-center gap-2">
+                                <div className="font-mono text-xs bg-zinc-950/80 border border-zinc-850 px-3 py-1.5 rounded-lg max-w-[160px] truncate text-zinc-500">
+                                  {isMasked 
+                                    ? `${customer.license_key.substring(0, 8)}••••••••${customer.license_key.substring(customer.license_key.length - 8)}`
+                                    : customer.license_key
+                                  }
+                                </div>
+                                
+                                <button
+                                  onClick={() => toggleMask(customer.id)}
+                                  title={isMasked ? "Show Key" : "Hide Key"}
+                                  className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+                                >
+                                  {isMasked ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                                </button>
+
+                                <button
+                                  onClick={() => copyToClipboard(customer.license_key, customer.id)}
+                                  title="Copy Key"
+                                  className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
+                                >
+                                  {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                </button>
+
+                                <button
+                                  onClick={() => handleVerifyKey(customer)}
+                                  title="Verify Cryptographic Key"
+                                  className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer animate-pulse"
+                                >
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Verify Key
+                                </button>
+                              </div>
+                            </td>
+
+                            <td className="py-4 px-6 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {/* Pause / Resume controls */}
+                                {customer.status === 'ACTIVE' ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleStatusChange(customer.id, 'PAUSED')}
+                                      title="Pause License"
+                                      className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-orange-400 hover:border-orange-500/20 transition-all cursor-pointer"
+                                    >
+                                      <Pause className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleStatusChange(customer.id, 'STOPPED')}
+                                      title="Stop License"
+                                      className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 hover:border-red-500/20 transition-all cursor-pointer"
+                                    >
+                                      <StopCircle className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => handleStatusChange(customer.id, 'ACTIVE')}
+                                    title="Activate/Resume License"
+                                    className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer"
+                                  >
+                                    <Play className="h-3 w-3" />
+                                    Resume
+                                  </button>
+                                )}
+
+                                {/* Renew */}
+                                <button
+                                  onClick={() => setRenewConfirmId(customer)}
+                                  title="Renew License (+1 Year)"
+                                  className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-emerald-500/40 text-zinc-400 hover:text-emerald-400 text-xs flex items-center gap-1 transition-all cursor-pointer"
+                                >
+                                  <Calendar className="h-3.5 w-3.5" />
+                                  Renew
+                                </button>
+
+                                {/* Delete */}
+                                <button
+                                  onClick={() => setDeleteConfirmId(customer.id)}
+                                  title="Delete Customer"
+                                  className="p-1.5 rounded-lg bg-zinc-900 hover:bg-rose-500/10 border border-zinc-800 hover:border-rose-500/20 text-zinc-400 hover:text-rose-455 transition-all cursor-pointer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* TAB CONTENT: SOFTWARE UPDATES */}
+        {activePanel === 'updates' && (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            
+            {/* Left Column: Push Update Form */}
+            <div className="lg:col-span-2 backdrop-blur-md bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 shadow-xl relative overflow-hidden h-fit">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+              <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-cyan-400" />
+                Push Online Release
+              </h2>
+              <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
+                Publishing an update will alert all LIS client applications as soon as they connect to the internet.
+              </p>
+
+              <form onSubmit={handlePushUpdate} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                    Release Version
+                  </label>
+                  <input
+                    type="text"
+                    value={updateVersion}
+                    onChange={(e) => setUpdateVersion(e.target.value)}
+                    placeholder="e.g. 1.1.0"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                    Release Title
+                  </label>
+                  <input
+                    type="text"
+                    value={updateTitle}
+                    onChange={(e) => setUpdateTitle(e.target.value)}
+                    placeholder="e.g. NABL Compliance Pack & Auto-Formula Updates"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                    Release Notes (What's new?)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={updateNotes}
+                    onChange={(e) => setUpdateNotes(e.target.value)}
+                    placeholder="1. Enter key jump shortcut&#10;2. MCV/MCH calculations auto-evaluated&#10;3. Premium layout margin adjustments"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all font-sans"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                    Download File URL
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={updateUrl}
+                      onChange={(e) => setUpdateUrl(e.target.value)}
+                      placeholder="https://example.com/downloads/lis-setup.exe"
+                      className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 pl-9 pr-4 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <LinkIcon className="h-3.5 w-3.5 text-zinc-550" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 py-1">
+                  <input
+                    id="isCritical"
+                    type="checkbox"
+                    checked={updateCritical}
+                    onChange={(e) => setUpdateCritical(e.target.checked)}
+                    className="h-4 w-4 bg-zinc-950 border-zinc-800 rounded focus:ring-cyan-500/30 text-cyan-500 cursor-pointer"
+                  />
+                  <label htmlFor="isCritical" className="text-xs text-zinc-400 font-semibold cursor-pointer select-none">
+                    Mark as Critical Release (Forced update alert)
+                  </label>
+                </div>
+
+                {updateError && (
+                  <div className="flex items-start gap-2.5 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs font-medium">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>{updateError}</span>
+                  </div>
+                )}
+
+                {updateSuccess && (
+                  <div className="flex items-start gap-2.5 p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs font-medium">
+                    <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>Update published successfully online!</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={updateLoading}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-zinc-950 font-bold py-3 px-4 rounded-xl shadow-lg shadow-cyan-500/5 transition-all cursor-pointer text-sm"
+                >
+                  {updateLoading ? (
+                    <div className="h-4 w-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <ArrowUpCircle className="h-4 w-4" />
+                      Publish Software Update
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
-          )}
-        </section>
+
+            {/* Right Column: Update Releases Log */}
+            <div className="lg:col-span-3 backdrop-blur-md bg-zinc-900/20 border border-zinc-850 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 mb-4">
+                  <History className="h-5 w-5 text-indigo-400" />
+                  Release History Log
+                </h2>
+
+                <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
+                  {updates.map((up, idx) => (
+                    <div key={idx} className="p-4 bg-zinc-950/70 border border-zinc-900 rounded-2xl relative overflow-hidden group">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2.5">
+                            <span className="font-mono text-xs font-extrabold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-lg">
+                              v{up.version}
+                            </span>
+                            {up.isCritical && (
+                              <span className="text-[9px] font-black uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 rounded">
+                                Critical
+                              </span>
+                            )}
+                            <span className="text-[10px] text-zinc-500">
+                              {new Date(up.publishedAt).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-zinc-200 mt-2 text-sm">{up.title}</h3>
+                          <div className="text-xs text-zinc-450 mt-1 whitespace-pre-line leading-relaxed font-sans pl-1.5 border-l-2 border-zinc-800">
+                            {up.releaseNotes}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3.5 pt-3 border-t border-zinc-900/60 flex items-center justify-between text-xs text-zinc-500">
+                        <span className="truncate max-w-[220px] font-mono text-[10px]" title={up.downloadUrl}>
+                          Url: {up.downloadUrl}
+                        </span>
+                        <a 
+                          href={up.downloadUrl} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-cyan-400 hover:text-cyan-300 font-bold hover:underline flex items-center gap-1 shrink-0"
+                        >
+                          Download Link
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+
+                  {updates.length === 0 && (
+                    <div className="py-16 text-center text-zinc-500">
+                      <History className="h-10 w-10 text-zinc-800 mx-auto mb-2" />
+                      <p className="font-bold text-zinc-400">No Releases Published</p>
+                      <p className="text-xs">Publish your first update to see the history log here.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
       </main>
 
       {/* RENEW CONFIRMATION MODAL */}
@@ -614,7 +941,7 @@ export default function DashboardPage() {
                 onClick={() => setVerifyKeyData(null)}
                 className="p-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
               >
-                <XCircle className="h-4 w-4" />
+                <XCircle className="className" />
               </button>
             </div>
 
@@ -640,7 +967,6 @@ export default function DashboardPage() {
               </div>
             ) : verifyKeyData.decryptedData ? (
               <div className="space-y-5">
-                {/* Visual success banner */}
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl flex items-center gap-3">
                   <ShieldCheck className="h-6 w-6 text-emerald-400 animate-bounce" />
                   <div>
@@ -649,7 +975,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Key inspection panel */}
                 <div className="space-y-3.5 bg-zinc-950 p-4 rounded-2xl border border-zinc-850 text-xs">
                   <div>
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1">Target Lab</div>
