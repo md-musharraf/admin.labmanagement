@@ -345,29 +345,35 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans overflow-x-hidden">
       {/* Background Glowing Blurs */}
-      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-indigo-500/8 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-[400px] h-[400px] rounded-full bg-emerald-500/8 blur-[100px] pointer-events-none" />
+
+      {/* Grid Pattern overlay */}
+      <div 
+        className="absolute inset-0 bg-[linear-gradient(to_right,#1f293708_1px,transparent_1px),linear-gradient(to_bottom,#1f293708_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-25" 
+        style={{ maskImage: 'radial-gradient(ellipse at center, black, transparent)' }}
+      />
 
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-            <Activity className="h-5.5 w-5.5 text-zinc-950" />
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-zinc-950/80 border-b border-zinc-800/80 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+            <Activity className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-zinc-950" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-50 to-zinc-300">
+            <h1 className="text-sm sm:text-base md:text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-50 to-zinc-300">
               Pathology LIS Portal
             </h1>
-            <p className="text-[10px] text-zinc-400 font-medium">License Registry & Administration</p>
+            <p className="text-[9px] sm:text-[10px] text-zinc-400 font-medium">License Registry & Administration</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* Demo Database Indicator */}
           {isDemo && (
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-xs font-semibold">
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-xs font-semibold">
               <Database className="h-3.5 w-3.5" />
-              Demo Mode
+              <span className="hidden md:inline">Demo Mode</span>
             </div>
           )}
           
@@ -381,10 +387,10 @@ export default function DashboardPage() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 hover:text-rose-400 text-zinc-300 font-semibold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer"
+            className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-855 hover:text-rose-400 text-zinc-300 font-semibold text-sm px-3.5 py-2 rounded-xl transition-all cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </header>
@@ -404,53 +410,53 @@ export default function DashboardPage() {
         )}
 
         {/* STATS PANEL (KPI Grid) */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Stat 1: Total Labs */}
-          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 relative overflow-hidden group shadow-lg shadow-black/40">
+          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 hover:border-indigo-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden group shadow-lg shadow-black/40 hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Activity className="h-20 w-20 text-zinc-100" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Registered Labs</p>
-            <p className="text-3xl font-extrabold mt-2 text-zinc-100">{totalLabs}</p>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Registered Labs</p>
+            <p className="text-2xl sm:text-3xl font-extrabold mt-2 text-zinc-100">{totalLabs}</p>
             <div className="mt-2 text-[10px] text-zinc-500 font-medium">Global active pathology clients</div>
           </div>
 
           {/* Stat 2: Active */}
-          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 relative overflow-hidden group shadow-lg shadow-black/40">
+          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 hover:border-emerald-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden group shadow-lg shadow-black/40 hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-300">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <CheckCircle className="h-20 w-20 text-emerald-500" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Authorized Active</p>
-            <p className="text-3xl font-extrabold mt-2 text-emerald-400">{activeLicenses}</p>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-400">Authorized Active</p>
+            <p className="text-2xl sm:text-3xl font-extrabold mt-2 text-emerald-400">{activeLicenses}</p>
             <div className="mt-2 text-[10px] text-emerald-500/60 font-medium">Valid credentials running</div>
           </div>
 
           {/* Stat 3: Expiring Soon */}
-          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 relative overflow-hidden group shadow-lg shadow-black/40">
+          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden group shadow-lg shadow-black/40 hover:shadow-amber-500/5 hover:-translate-y-0.5 transition-all duration-300">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <AlertTriangle className="h-20 w-20 text-amber-500" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Expiring Soon</p>
-            <p className="text-3xl font-extrabold mt-2 text-amber-400">{expiringSoonLicenses}</p>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-400">Expiring Soon</p>
+            <p className="text-2xl sm:text-3xl font-extrabold mt-2 text-amber-400">{expiringSoonLicenses}</p>
             <div className="mt-2 text-[10px] text-amber-500/60 font-medium">Expiry in next 30 days</div>
           </div>
 
           {/* Stat 4: Expired */}
-          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-5 relative overflow-hidden group shadow-lg shadow-black/40">
+          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 hover:border-rose-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden group shadow-lg shadow-black/40 hover:shadow-rose-500/5 hover:-translate-y-0.5 transition-all duration-300">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <ShieldAlert className="h-20 w-20 text-rose-500" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Blocked / Expired</p>
-            <p className="text-3xl font-extrabold mt-2 text-rose-400">{expiredLicenses}</p>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-400">Blocked / Expired</p>
+            <p className="text-2xl sm:text-3xl font-extrabold mt-2 text-rose-400">{expiredLicenses}</p>
             <div className="mt-2 text-[10px] text-rose-500/60 font-medium">Requires renewal or unlock</div>
           </div>
         </section>
 
         {/* Dynamic Panels Tab bar */}
-        <div className="flex border-b border-zinc-800 gap-6">
+        <div className="flex border-b border-zinc-800 gap-4 sm:gap-6 overflow-x-auto scrollbar-none scroll-smooth">
           <button 
             onClick={() => setActivePanel('labs')}
-            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer ${activePanel === 'labs' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer whitespace-nowrap ${activePanel === 'labs' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Cpu className="h-4 w-4" />
             Registered Laboratories
@@ -460,7 +466,7 @@ export default function DashboardPage() {
           </button>
           <button 
             onClick={() => setActivePanel('updates')}
-            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer ${activePanel === 'updates' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer whitespace-nowrap ${activePanel === 'updates' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <ArrowUpCircle className="h-4 w-4" />
             Software Updates Manager
@@ -475,26 +481,26 @@ export default function DashboardPage() {
           <div className="space-y-6">
             {/* CONTROLS (Search & Filters) */}
             <section className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1 max-w-md w-full">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by Lab Name, Owner, Phone or Machine ID..."
-                  className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/40 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner"
+                  className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/45 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner hover:border-zinc-700"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-zinc-500" />
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="bg-zinc-900/60 p-1 rounded-xl border border-zinc-800/60 flex items-center">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="bg-zinc-900/60 p-1 rounded-xl border border-zinc-800/60 flex items-center overflow-x-auto whitespace-nowrap scrollbar-none justify-between sm:justify-start">
                   {(['All', 'Active', 'Expiring Soon', 'Expired'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setStatusFilter(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
                         statusFilter === tab 
                           ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/5' 
                           : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
@@ -507,7 +513,7 @@ export default function DashboardPage() {
 
                 <button
                   onClick={() => setIsAddOpen(true)}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-zinc-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/5 flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-zinc-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/5 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer w-full sm:w-auto"
                 >
                   <Plus className="h-4.5 w-4.5" />
                   Add Customer
@@ -515,7 +521,7 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* CUSTOMERS TABLE */}
+            {/* CUSTOMERS DATA CONTAINER */}
             <section className="backdrop-blur-md bg-zinc-900/35 border border-zinc-800/80 rounded-2xl shadow-xl overflow-hidden">
               {loading && customers.length === 0 ? (
                 <div className="p-16 flex flex-col items-center justify-center gap-4 text-zinc-400">
@@ -529,159 +535,303 @@ export default function DashboardPage() {
                   <p className="text-xs">Adjust filters or search parameters, or register a new laboratory client.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-zinc-800/60 bg-zinc-900/10 text-zinc-400 text-[11px] font-bold uppercase tracking-wider">
-                        <th className="py-4 px-6">Laboratory & Owner</th>
-                        <th className="py-4 px-6">Contact Phone</th>
-                        <th className="py-4 px-6">Machine ID</th>
-                        <th className="py-4 px-6">Expiry & Access Status</th>
-                        <th className="py-4 px-6">License Key</th>
-                        <th className="py-4 px-6 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800/30 text-sm font-medium">
-                      {filteredCustomers.map((customer) => {
-                        const status = getLicenseStatus(customer.expiry_date);
-                        const adminStatus = getAdminStatusDetails(customer.status);
-                        const isMasked = !unmaskedKeys[customer.id];
-                        const isCopied = copiedId === customer.id;
+                <>
+                  {/* Desktop View Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-zinc-800/60 bg-zinc-900/10 text-zinc-400 text-[11px] font-bold uppercase tracking-wider">
+                          <th className="py-4 px-6">Laboratory & Owner</th>
+                          <th className="py-4 px-6">Contact Phone</th>
+                          <th className="py-4 px-6">Machine ID</th>
+                          <th className="py-4 px-6">Expiry & Access Status</th>
+                          <th className="py-4 px-6">License Key</th>
+                          <th className="py-4 px-6 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800/30 text-sm font-medium">
+                        {filteredCustomers.map((customer) => {
+                          const status = getLicenseStatus(customer.expiry_date);
+                          const adminStatus = getAdminStatusDetails(customer.status);
+                          const isMasked = !unmaskedKeys[customer.id];
+                          const isCopied = copiedId === customer.id;
 
-                        return (
-                          <tr key={customer.id} className="hover:bg-zinc-900/20 transition-colors">
-                            <td className="py-4 px-6">
-                              <div className="font-bold text-zinc-100">{customer.lab_name}</div>
+                          return (
+                            <tr key={customer.id} className="hover:bg-zinc-900/20 transition-colors">
+                              <td className="py-4 px-6">
+                                <div className="font-bold text-zinc-100">{customer.lab_name}</div>
+                                <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
+                                  <User className="h-3 w-3" />
+                                  {customer.owner_name}
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-6 text-zinc-300">
+                                <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                                  <Phone className="h-3.5 w-3.5 text-zinc-500" />
+                                  {customer.phone}
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-6">
+                                <span className="font-mono text-xs px-2 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-zinc-400">
+                                  {customer.machine_id}
+                                </span>
+                              </td>
+
+                              <td className="py-4 px-6">
+                                <div className="text-zinc-200 text-xs font-semibold">
+                                  {new Date(customer.expiry_date).toLocaleDateString(undefined, {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
+                                </div>
+                                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                  <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${status.color}`}>
+                                    {status.label}
+                                  </span>
+                                  <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${adminStatus.color}`}>
+                                    {adminStatus.label}
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-2">
+                                  <div className="font-mono text-xs bg-zinc-950/80 border border-zinc-850 px-3 py-1.5 rounded-lg max-w-[160px] truncate text-zinc-500">
+                                    {isMasked 
+                                      ? `${customer.license_key.substring(0, 8)}••••••••${customer.license_key.substring(customer.license_key.length - 8)}`
+                                      : customer.license_key
+                                    }
+                                  </div>
+                                  
+                                  <button
+                                    onClick={() => toggleMask(customer.id)}
+                                    title={isMasked ? "Show Key" : "Hide Key"}
+                                    className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+                                  >
+                                    {isMasked ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                                  </button>
+
+                                  <button
+                                    onClick={() => copyToClipboard(customer.license_key, customer.id)}
+                                    title="Copy Key"
+                                    className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
+                                  >
+                                    {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleVerifyKey(customer)}
+                                    title="Verify Cryptographic Key"
+                                    className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer"
+                                  >
+                                    <ShieldCheck className="h-3 w-3" />
+                                    Verify Key
+                                  </button>
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-6 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {/* Pause / Resume controls */}
+                                  {customer.status === 'ACTIVE' ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleStatusChange(customer.id, 'PAUSED')}
+                                        title="Pause License"
+                                        className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-orange-400 hover:border-orange-500/20 transition-all cursor-pointer"
+                                      >
+                                        <Pause className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleStatusChange(customer.id, 'STOPPED')}
+                                        title="Stop License"
+                                        className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 hover:border-red-500/20 transition-all cursor-pointer"
+                                      >
+                                        <StopCircle className="h-3.5 w-3.5" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleStatusChange(customer.id, 'ACTIVE')}
+                                      title="Activate/Resume License"
+                                      className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer"
+                                    >
+                                      <Play className="h-3 w-3" />
+                                      Resume
+                                    </button>
+                                  )}
+
+                                  {/* Renew */}
+                                  <button
+                                    onClick={() => setRenewConfirmId(customer)}
+                                    title="Renew License (+1 Year)"
+                                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-emerald-500/40 text-zinc-400 hover:text-emerald-400 text-xs flex items-center gap-1 transition-all cursor-pointer"
+                                  >
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    Renew
+                                  </button>
+
+                                  {/* Delete */}
+                                  <button
+                                    onClick={() => setDeleteConfirmId(customer.id)}
+                                    title="Delete Customer"
+                                    className="p-1.5 rounded-lg bg-zinc-900 hover:bg-rose-500/10 border border-zinc-800 hover:border-rose-500/20 text-zinc-400 hover:text-rose-455 transition-all cursor-pointer"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile View Cards */}
+                  <div className="block md:hidden space-y-4 p-4 divide-y divide-zinc-800/40">
+                    {filteredCustomers.map((customer, idx) => {
+                      const status = getLicenseStatus(customer.expiry_date);
+                      const adminStatus = getAdminStatusDetails(customer.status);
+                      const isMasked = !unmaskedKeys[customer.id];
+                      const isCopied = copiedId === customer.id;
+
+                      return (
+                        <div key={customer.id} className={`space-y-4 ${idx > 0 ? 'pt-4' : ''}`}>
+                          {/* Lab Title and Status Badges */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h4 className="font-bold text-zinc-100 text-sm">{customer.lab_name}</h4>
                               <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
-                                <User className="h-3 w-3" />
+                                <User className="h-3 w-3 text-zinc-650" />
                                 {customer.owner_name}
                               </div>
-                            </td>
+                            </div>
+                            <div className="flex flex-col gap-1 items-end shrink-0">
+                              <span className={`inline-block text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${status.color}`}>
+                                {status.label}
+                              </span>
+                              <span className={`inline-block text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${adminStatus.color}`}>
+                                {adminStatus.label}
+                              </span>
+                            </div>
+                          </div>
 
-                            <td className="py-4 px-6 text-zinc-300">
-                              <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                                <Phone className="h-3.5 w-3.5 text-zinc-500" />
+                          {/* Grid Metadata */}
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div className="space-y-1">
+                              <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Phone</div>
+                              <a href={`tel:${customer.phone}`} className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400">
+                                <Phone className="h-3 w-3 text-zinc-600" />
                                 {customer.phone}
-                              </div>
-                            </td>
-
-                            <td className="py-4 px-6">
-                              <span className="font-mono text-xs px-2 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-zinc-400">
+                              </a>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Machine ID</div>
+                              <span className="font-mono text-[10px] px-1.5 py-0.5 bg-zinc-950 border border-zinc-850 rounded text-zinc-400 inline-block truncate max-w-full">
                                 {customer.machine_id}
                               </span>
-                            </td>
+                            </div>
+                          </div>
 
-                            <td className="py-4 px-6">
-                              <div className="text-zinc-200 text-xs font-semibold">
-                                {new Date(customer.expiry_date).toLocaleDateString(undefined, {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </div>
-                              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${status.color}`}>
-                                  {status.label}
-                                </span>
-                                <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${adminStatus.color}`}>
-                                  {adminStatus.label}
-                                </span>
-                              </div>
-                            </td>
+                          <div className="space-y-1 text-xs">
+                            <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Expiry Date</div>
+                            <div className="flex items-center gap-1 text-zinc-300">
+                              <Calendar className="h-3.5 w-3.5 text-zinc-600" />
+                              {new Date(customer.expiry_date).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </div>
+                          </div>
 
-                            <td className="py-4 px-6">
-                              <div className="flex items-center gap-2">
-                                <div className="font-mono text-xs bg-zinc-950/80 border border-zinc-850 px-3 py-1.5 rounded-lg max-w-[160px] truncate text-zinc-500">
-                                  {isMasked 
-                                    ? `${customer.license_key.substring(0, 8)}••••••••${customer.license_key.substring(customer.license_key.length - 8)}`
-                                    : customer.license_key
-                                  }
-                                </div>
-                                
+                          {/* License Key Section */}
+                          <div className="bg-zinc-950/80 border border-zinc-850 rounded-xl p-3 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="font-mono text-xs text-zinc-500 truncate select-all">
+                                {isMasked 
+                                  ? `${customer.license_key.substring(0, 8)}••••••••${customer.license_key.substring(customer.license_key.length - 8)}`
+                                  : customer.license_key
+                                }
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
                                 <button
                                   onClick={() => toggleMask(customer.id)}
-                                  title={isMasked ? "Show Key" : "Hide Key"}
-                                  className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+                                  className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
                                 >
                                   {isMasked ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                                 </button>
-
                                 <button
                                   onClick={() => copyToClipboard(customer.license_key, customer.id)}
-                                  title="Copy Key"
-                                  className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
+                                  className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
                                 >
                                   {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                                 </button>
-
-                                <button
-                                  onClick={() => handleVerifyKey(customer)}
-                                  title="Verify Cryptographic Key"
-                                  className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer animate-pulse"
-                                >
-                                  <ShieldCheck className="h-3 w-3" />
-                                  Verify Key
-                                </button>
                               </div>
-                            </td>
+                            </div>
+                            <button
+                              onClick={() => handleVerifyKey(customer)}
+                              className="w-full flex items-center justify-center gap-1 py-1.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer"
+                            >
+                              <ShieldCheck className="h-3 w-3" />
+                              Verify Key Integrity
+                            </button>
+                          </div>
 
-                            <td className="py-4 px-6 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                {/* Pause / Resume controls */}
-                                {customer.status === 'ACTIVE' ? (
-                                  <>
-                                    <button
-                                      onClick={() => handleStatusChange(customer.id, 'PAUSED')}
-                                      title="Pause License"
-                                      className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-orange-400 hover:border-orange-500/20 transition-all cursor-pointer"
-                                    >
-                                      <Pause className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleStatusChange(customer.id, 'STOPPED')}
-                                      title="Stop License"
-                                      className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 hover:border-red-500/20 transition-all cursor-pointer"
-                                    >
-                                      <StopCircle className="h-3.5 w-3.5" />
-                                    </button>
-                                  </>
-                                ) : (
+                          {/* Actions Buttons */}
+                          <div className="flex items-center justify-between gap-2 pt-2">
+                            <div className="flex gap-1">
+                              {customer.status === 'ACTIVE' ? (
+                                <>
                                   <button
-                                    onClick={() => handleStatusChange(customer.id, 'ACTIVE')}
-                                    title="Activate/Resume License"
-                                    className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer"
+                                    onClick={() => handleStatusChange(customer.id, 'PAUSED')}
+                                    className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-orange-400 transition-all cursor-pointer"
                                   >
-                                    <Play className="h-3 w-3" />
-                                    Resume
+                                    <Pause className="h-3.5 w-3.5" />
                                   </button>
-                                )}
-
-                                {/* Renew */}
+                                  <button
+                                    onClick={() => handleStatusChange(customer.id, 'STOPPED')}
+                                    className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-rose-500 transition-all cursor-pointer"
+                                  >
+                                    <StopCircle className="h-3.5 w-3.5" />
+                                  </button>
+                                </>
+                              ) : (
                                 <button
-                                  onClick={() => setRenewConfirmId(customer)}
-                                  title="Renew License (+1 Year)"
-                                  className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-emerald-500/40 text-zinc-400 hover:text-emerald-400 text-xs flex items-center gap-1 transition-all cursor-pointer"
+                                  onClick={() => handleStatusChange(customer.id, 'ACTIVE')}
+                                  className="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer font-semibold"
                                 >
-                                  <Calendar className="h-3.5 w-3.5" />
-                                  Renew
+                                  <Play className="h-3.5 w-3.5" />
+                                  Resume
                                 </button>
+                              )}
+                            </div>
 
-                                {/* Delete */}
-                                <button
-                                  onClick={() => setDeleteConfirmId(customer.id)}
-                                  title="Delete Customer"
-                                  className="p-1.5 rounded-lg bg-zinc-900 hover:bg-rose-500/10 border border-zinc-800 hover:border-rose-500/20 text-zinc-400 hover:text-rose-455 transition-all cursor-pointer"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => setRenewConfirmId(customer)}
+                                className="px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-350 hover:text-emerald-400 hover:border-emerald-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer font-semibold"
+                              >
+                                <Calendar className="h-3.5 w-3.5" />
+                                Renew
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirmId(customer.id)}
+                                className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-rose-500 transition-all cursor-pointer"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </section>
           </div>
@@ -951,7 +1101,7 @@ export default function DashboardPage() {
       {verifyKeyData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setVerifyKeyData(null)} />
-          <div className="relative backdrop-blur-xl bg-zinc-900/95 border border-zinc-850 rounded-3xl p-6 max-w-md w-full shadow-2xl z-10 animate-scaleUp">
+          <div className="relative backdrop-blur-xl bg-zinc-900/95 border border-zinc-850 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl z-10 animate-scaleUp">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
             
             <div className="flex items-center justify-between pb-4 border-b border-zinc-850 mb-5">
@@ -963,7 +1113,7 @@ export default function DashboardPage() {
                 onClick={() => setVerifyKeyData(null)}
                 className="p-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
               >
-                <XCircle className="className" />
+                <XCircle className="h-5 w-5" />
               </button>
             </div>
 
@@ -1001,9 +1151,7 @@ export default function DashboardPage() {
                   <div>
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1">Target Lab</div>
                     <div className="font-bold text-zinc-200">{verifyKeyData.customer.lab_name}</div>
-                  </div>
-
-                  <div className="border-t border-zinc-900 pt-3">
+                            <div className="border-t border-zinc-900 pt-3">
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span>Hardware Machine ID</span>
                       {verifyKeyData.decryptedData.matchesMachine ? (
@@ -1016,14 +1164,14 @@ export default function DashboardPage() {
                         </span>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div>
-                        <div className="text-[9px] text-zinc-600 font-medium">Database state:</div>
-                        <div className="font-mono mt-0.5 text-zinc-400">{verifyKeyData.customer.machine_id}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                      <div className="bg-zinc-900/50 p-2 rounded-lg border border-zinc-850">
+                        <div className="text-[9px] text-zinc-500 font-medium">Database state:</div>
+                        <div className="font-mono mt-0.5 text-zinc-300 break-all">{verifyKeyData.customer.machine_id}</div>
                       </div>
-                      <div>
-                        <div className="text-[9px] text-zinc-600 font-medium">Decrypted Key state:</div>
-                        <div className="font-mono mt-0.5 text-emerald-400">{verifyKeyData.decryptedData.machineId}</div>
+                      <div className="bg-zinc-900/50 p-2 rounded-lg border border-zinc-855">
+                        <div className="text-[9px] text-zinc-500 font-medium">Decrypted Key state:</div>
+                        <div className="font-mono mt-0.5 text-emerald-450 break-all">{verifyKeyData.decryptedData.machineId}</div>
                       </div>
                     </div>
                   </div>
@@ -1041,21 +1189,21 @@ export default function DashboardPage() {
                         </span>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div>
-                        <div className="text-[9px] text-zinc-600 font-medium">Database state:</div>
-                        <div className="mt-0.5 text-zinc-400 truncate" title={verifyKeyData.customer.expiry_date}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                      <div className="bg-zinc-900/50 p-2 rounded-lg border border-zinc-850">
+                        <div className="text-[9px] text-zinc-500 font-medium">Database state:</div>
+                        <div className="mt-0.5 text-zinc-300 truncate" title={verifyKeyData.customer.expiry_date}>
                           {new Date(verifyKeyData.customer.expiry_date).toDateString()}
                         </div>
                       </div>
-                      <div>
-                        <div className="text-[9px] text-zinc-600 font-medium">Decrypted Key state:</div>
-                        <div className="mt-0.5 text-emerald-400 truncate" title={verifyKeyData.decryptedData.expirationDate}>
+                      <div className="bg-zinc-900/50 p-2 rounded-lg border border-zinc-850">
+                        <div className="text-[9px] text-zinc-500 font-medium">Decrypted Key state:</div>
+                        <div className="mt-0.5 text-emerald-450 truncate" title={verifyKeyData.decryptedData.expirationDate}>
                           {new Date(verifyKeyData.decryptedData.expirationDate).toDateString()}
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div>          </div>
 
                   <div className="border-t border-zinc-900 pt-3">
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1">Payload Format Decoded</div>

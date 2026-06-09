@@ -81,7 +81,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
       />
 
       {/* Drawer Panel */}
-      <div className="relative w-full max-w-md h-full bg-zinc-950/90 border-l border-zinc-800/80 backdrop-blur-xl p-8 flex flex-col justify-between shadow-2xl z-10 animate-slideOver">
+      <div className="relative w-full max-w-md h-full bg-zinc-950/90 border-l border-zinc-800/80 backdrop-blur-xl p-5 sm:p-8 flex flex-col justify-between shadow-2xl z-10 animate-slideOver">
         {/* Top border ambient glow */}
         <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-emerald-500/30 via-cyan-500/20 to-transparent" />
 
@@ -120,7 +120,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 onChange={(e) => setLabName(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, 'ownerName')}
                 placeholder="e.g. Apex Diagnostics Lab"
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
                 disabled={loading}
               />
             </div>
@@ -138,7 +138,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 onChange={(e) => setOwnerName(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, 'phone')}
                 placeholder="e.g. Dr. Sarah Connor"
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-600 transition-all"
                 disabled={loading}
               />
             </div>
@@ -156,7 +156,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 onChange={(e) => setPhone(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, 'machineId')}
                 placeholder="e.g. +1 (555) 019-2834"
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                 disabled={loading}
               />
             </div>
@@ -174,7 +174,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 onChange={(e) => setMachineId(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, 'planDuration')}
                 placeholder="e.g. LIS-MAC-9872X"
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-violet-500/80 focus:ring-1 focus:ring-violet-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-violet-500/80 focus:ring-1 focus:ring-violet-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all"
                 disabled={loading}
               />
             </div>
@@ -195,7 +195,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                     handleSubmit(e);
                   }
                 }}
-                className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm transition-all"
+                className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm transition-all"
                 disabled={loading}
               >
                 <option value="1 Month">1 Month</option>
@@ -207,7 +207,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
 
             {/* Error Message */}
             {error && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs font-medium">
+              <div className="flex items-start gap-2.5 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs font-medium animate-fadeIn">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
