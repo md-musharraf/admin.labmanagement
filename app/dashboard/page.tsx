@@ -305,7 +305,7 @@ export default function DashboardPage() {
     if (diffDays <= 30) {
       return { label: `Expiring soon (${diffDays}d)`, color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20', raw: 'Expiring Soon' };
     }
-    return { label: 'Active', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', raw: 'Active' };
+    return { label: 'Active', color: 'bg-teal-500/10 text-teal-400 border border-teal-500/20', raw: 'Active' };
   };
 
   const getAdminStatusDetails = (status: string) => {
@@ -315,7 +315,7 @@ export default function DashboardPage() {
       case 'STOPPED':
         return { label: 'Stopped / Revoked', color: 'bg-red-500/15 text-red-400 border border-red-500/25' };
       default:
-        return { label: 'Online Active', color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' };
+        return { label: 'Online Active', color: 'bg-teal-500/15 text-teal-400 border border-teal-500/25' };
     }
   };
 
@@ -345,8 +345,8 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans overflow-x-hidden">
       {/* Background Glowing Blurs */}
-      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-indigo-500/8 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-[400px] h-[400px] rounded-full bg-emerald-500/8 blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-[400px] h-[400px] rounded-full bg-violet-500/8 blur-[100px] pointer-events-none" />
 
       {/* Grid Pattern overlay */}
       <div 
@@ -357,8 +357,8 @@ export default function DashboardPage() {
       {/* Header Bar */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-zinc-950/80 border-b border-zinc-800/80 px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-            <Activity className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-zinc-950" />
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/10">
+            <Activity className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-white" />
           </div>
           <div>
             <h1 className="text-sm sm:text-base md:text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-50 to-zinc-300">
@@ -422,13 +422,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Stat 2: Active */}
-          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 hover:border-emerald-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden group shadow-lg shadow-black/40 hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-300">
+          <div className="backdrop-blur-md bg-zinc-900/40 border border-zinc-800/80 hover:border-teal-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden group shadow-lg shadow-black/40 hover:shadow-teal-500/5 hover:-translate-y-0.5 transition-all duration-300">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <CheckCircle className="h-20 w-20 text-emerald-500" />
+              <CheckCircle className="h-20 w-20 text-teal-500" />
             </div>
             <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-400">Authorized Active</p>
-            <p className="text-2xl sm:text-3xl font-extrabold mt-2 text-emerald-400">{activeLicenses}</p>
-            <div className="mt-2 text-[10px] text-emerald-500/60 font-medium">Valid credentials running</div>
+            <p className="text-2xl sm:text-3xl font-extrabold mt-2 text-teal-400">{activeLicenses}</p>
+            <div className="mt-2 text-[10px] text-teal-500/60 font-medium">Valid credentials running</div>
           </div>
 
           {/* Stat 3: Expiring Soon */}
@@ -456,22 +456,22 @@ export default function DashboardPage() {
         <div className="flex border-b border-zinc-800 gap-4 sm:gap-6 overflow-x-auto scrollbar-none scroll-smooth">
           <button 
             onClick={() => setActivePanel('labs')}
-            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer whitespace-nowrap ${activePanel === 'labs' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer whitespace-nowrap ${activePanel === 'labs' ? 'text-indigo-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Cpu className="h-4 w-4" />
             Registered Laboratories
             {activePanel === 'labs' && (
-              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-emerald-500" />
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-indigo-500" />
             )}
           </button>
           <button 
             onClick={() => setActivePanel('updates')}
-            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer whitespace-nowrap ${activePanel === 'updates' ? 'text-emerald-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer whitespace-nowrap ${activePanel === 'updates' ? 'text-indigo-400 font-extrabold' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <ArrowUpCircle className="h-4 w-4" />
             Software Updates Manager
             {activePanel === 'updates' && (
-              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-emerald-500" />
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-indigo-500" />
             )}
           </button>
         </div>
@@ -487,7 +487,7 @@ export default function DashboardPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by Lab Name, Owner, Phone or Machine ID..."
-                  className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/45 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner hover:border-zinc-700"
+                  className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/45 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner hover:border-zinc-700"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-zinc-500" />
@@ -502,7 +502,7 @@ export default function DashboardPage() {
                       onClick={() => setStatusFilter(tab)}
                       className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
                         statusFilter === tab 
-                          ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/5' 
+                          ? 'bg-indigo-600 text-zinc-50 font-bold shadow-md shadow-indigo-600/15' 
                           : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                       }`}
                     >
@@ -513,7 +513,7 @@ export default function DashboardPage() {
 
                 <button
                   onClick={() => setIsAddOpen(true)}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-zinc-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/5 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer w-full sm:w-auto"
+                  className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-zinc-50 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-500/15 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer w-full sm:w-auto"
                 >
                   <Plus className="h-4.5 w-4.5" />
                   Add Customer
@@ -525,7 +525,7 @@ export default function DashboardPage() {
             <section className="backdrop-blur-md bg-zinc-900/35 border border-zinc-800/80 rounded-2xl shadow-xl overflow-hidden">
               {loading && customers.length === 0 ? (
                 <div className="p-16 flex flex-col items-center justify-center gap-4 text-zinc-400">
-                  <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                   <p className="text-sm font-semibold">Contacting registry database...</p>
                 </div>
               ) : filteredCustomers.length === 0 ? (
@@ -541,12 +541,12 @@ export default function DashboardPage() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-zinc-800/60 bg-zinc-900/10 text-zinc-400 text-[11px] font-bold uppercase tracking-wider">
-                          <th className="py-4 px-6">Laboratory & Owner</th>
-                          <th className="py-4 px-6">Contact Phone</th>
-                          <th className="py-4 px-6">Machine ID</th>
-                          <th className="py-4 px-6">Expiry & Access Status</th>
-                          <th className="py-4 px-6">License Key</th>
-                          <th className="py-4 px-6 text-right">Actions</th>
+                          <th className="py-4 px-6 min-w-[200px]">Laboratory & Owner</th>
+                          <th className="py-4 px-6 min-w-[140px]">Contact Phone</th>
+                          <th className="py-4 px-6 min-w-[170px]">Machine ID</th>
+                          <th className="py-4 px-6 min-w-[170px]">Expiry & Access Status</th>
+                          <th className="py-4 px-6 min-w-[310px]">License Key</th>
+                          <th className="py-4 px-6 text-right min-w-[185px]">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800/30 text-sm font-medium">
@@ -566,7 +566,7 @@ export default function DashboardPage() {
                                 </div>
                               </td>
 
-                              <td className="py-4 px-6 text-zinc-300">
+                              <td className="py-4 px-6 text-zinc-350">
                                 <div className="flex items-center gap-1.5 text-xs text-zinc-400">
                                   <Phone className="h-3.5 w-3.5 text-zinc-500" />
                                   {customer.phone}
@@ -574,8 +574,13 @@ export default function DashboardPage() {
                               </td>
 
                               <td className="py-4 px-6">
-                                <span className="font-mono text-xs px-2 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-zinc-400">
-                                  {customer.machine_id}
+                                <span 
+                                  className="font-mono text-xs px-2 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-zinc-400 block w-fit truncate max-w-[145px] cursor-help"
+                                  title={customer.machine_id}
+                                >
+                                  {customer.machine_id.length > 18 
+                                    ? `${customer.machine_id.substring(0, 8)}...${customer.machine_id.slice(-8)}` 
+                                    : customer.machine_id}
                                 </span>
                               </td>
 
@@ -619,13 +624,13 @@ export default function DashboardPage() {
                                     title="Copy Key"
                                     className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
                                   >
-                                    {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                    {isCopied ? <Check className="h-3.5 w-3.5 text-teal-400" /> : <Copy className="h-3.5 w-3.5" />}
                                   </button>
 
                                   <button
                                     onClick={() => handleVerifyKey(customer)}
                                     title="Verify Cryptographic Key"
-                                    className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer"
+                                    className="flex items-center gap-1 px-2 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold transition-all cursor-pointer"
                                   >
                                     <ShieldCheck className="h-3 w-3" />
                                     Verify Key
@@ -657,7 +662,7 @@ export default function DashboardPage() {
                                     <button
                                       onClick={() => handleStatusChange(customer.id, 'ACTIVE')}
                                       title="Activate/Resume License"
-                                      className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer"
+                                      className="px-2 py-1 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer"
                                     >
                                       <Play className="h-3 w-3" />
                                       Resume
@@ -668,7 +673,7 @@ export default function DashboardPage() {
                                   <button
                                     onClick={() => setRenewConfirmId(customer)}
                                     title="Renew License (+1 Year)"
-                                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-emerald-500/40 text-zinc-400 hover:text-emerald-400 text-xs flex items-center gap-1 transition-all cursor-pointer"
+                                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-indigo-500/40 text-zinc-400 hover:text-indigo-400 text-xs flex items-center gap-1 transition-all cursor-pointer"
                                   >
                                     <Calendar className="h-3.5 w-3.5" />
                                     Renew
@@ -724,15 +729,20 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-2 gap-3 text-xs">
                             <div className="space-y-1">
                               <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Phone</div>
-                              <a href={`tel:${customer.phone}`} className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400">
+                              <a href={`tel:${customer.phone}`} className="flex items-center gap-1 text-zinc-300 hover:text-indigo-400">
                                 <Phone className="h-3 w-3 text-zinc-600" />
                                 {customer.phone}
                               </a>
                             </div>
                             <div className="space-y-1">
                               <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Machine ID</div>
-                              <span className="font-mono text-[10px] px-1.5 py-0.5 bg-zinc-950 border border-zinc-850 rounded text-zinc-400 inline-block truncate max-w-full">
-                                {customer.machine_id}
+                              <span 
+                                className="font-mono text-[10px] px-1.5 py-0.5 bg-zinc-950 border border-zinc-850 rounded text-zinc-400 inline-block truncate max-w-full cursor-help"
+                                title={customer.machine_id}
+                              >
+                                {customer.machine_id.length > 18 
+                                  ? `${customer.machine_id.substring(0, 8)}...${customer.machine_id.slice(-8)}` 
+                                  : customer.machine_id}
                               </span>
                             </div>
                           </div>
@@ -769,13 +779,13 @@ export default function DashboardPage() {
                                   onClick={() => copyToClipboard(customer.license_key, customer.id)}
                                   className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer relative"
                                 >
-                                  {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                  {isCopied ? <Check className="h-3.5 w-3.5 text-teal-400" /> : <Copy className="h-3.5 w-3.5" />}
                                 </button>
                               </div>
                             </div>
                             <button
                               onClick={() => handleVerifyKey(customer)}
-                              className="w-full flex items-center justify-center gap-1 py-1.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer"
+                              className="w-full flex items-center justify-center gap-1 py-1.5 rounded bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold transition-all cursor-pointer"
                             >
                               <ShieldCheck className="h-3 w-3" />
                               Verify Key Integrity
@@ -803,7 +813,7 @@ export default function DashboardPage() {
                               ) : (
                                 <button
                                   onClick={() => handleStatusChange(customer.id, 'ACTIVE')}
-                                  className="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer font-semibold"
+                                  className="px-2.5 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 text-xs rounded-lg flex items-center gap-1 transition-all cursor-pointer font-semibold"
                                 >
                                   <Play className="h-3.5 w-3.5" />
                                   Resume
@@ -814,7 +824,7 @@ export default function DashboardPage() {
                             <div className="flex gap-1.5">
                               <button
                                 onClick={() => setRenewConfirmId(customer)}
-                                className="px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-350 hover:text-emerald-400 hover:border-emerald-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer font-semibold"
+                                className="px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-350 hover:text-indigo-400 hover:border-indigo-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer font-semibold"
                               >
                                 <Calendar className="h-3.5 w-3.5" />
                                 Renew
@@ -1102,11 +1112,11 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setVerifyKeyData(null)} />
           <div className="relative backdrop-blur-xl bg-zinc-900/95 border border-zinc-850 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl z-10 animate-scaleUp">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent" />
             
             <div className="flex items-center justify-between pb-4 border-b border-zinc-850 mb-5">
               <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-emerald-400" />
+                <ShieldCheck className="h-5 w-5 text-indigo-400" />
                 LIS Cryptographic Audit
               </h3>
               <button 
@@ -1119,8 +1129,8 @@ export default function DashboardPage() {
 
             {verifyKeyData.decrypting ? (
               <div className="py-12 flex flex-col items-center justify-center gap-4">
-                <div className="h-10 w-10 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                <div className="text-xs font-semibold text-emerald-400 uppercase tracking-widest animate-pulse">
+                <div className="h-10 w-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                <div className="text-xs font-semibold text-indigo-400 uppercase tracking-widest animate-pulse">
                   Decoding AES-256-CBC...
                 </div>
               </div>
@@ -1139,11 +1149,11 @@ export default function DashboardPage() {
               </div>
             ) : verifyKeyData.decryptedData ? (
               <div className="space-y-5">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl flex items-center gap-3">
-                  <ShieldCheck className="h-6 w-6 text-emerald-400 animate-bounce" />
+                <div className="p-4 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-xl flex items-center gap-3">
+                  <ShieldCheck className="h-6 w-6 text-teal-400 animate-bounce" />
                   <div>
                     <div className="text-xs font-black uppercase tracking-wider">Integrity Audit Passed</div>
-                    <div className="text-[10px] text-emerald-500/70 font-semibold mt-0.5">Authenticity & Cryptography Validated</div>
+                    <div className="text-[10px] text-teal-500/70 font-semibold mt-0.5">Authenticity & Cryptography Validated</div>
                   </div>
                 </div>
 
@@ -1155,7 +1165,7 @@ export default function DashboardPage() {
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span>Hardware Machine ID</span>
                       {verifyKeyData.decryptedData.matchesMachine ? (
-                        <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-0.5 bg-emerald-500/10 border border-emerald-500/20 px-1 rounded">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-teal-400 flex items-center gap-0.5 bg-teal-500/10 border border-teal-500/20 px-1 rounded">
                           <Check className="h-2.5 w-2.5" /> Matches
                         </span>
                       ) : (
@@ -1171,7 +1181,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="bg-zinc-900/50 p-2 rounded-lg border border-zinc-855">
                         <div className="text-[9px] text-zinc-500 font-medium">Decrypted Key state:</div>
-                        <div className="font-mono mt-0.5 text-emerald-450 break-all">{verifyKeyData.decryptedData.machineId}</div>
+                        <div className="font-mono mt-0.5 text-teal-400 break-all">{verifyKeyData.decryptedData.machineId}</div>
                       </div>
                     </div>
                   </div>
@@ -1180,7 +1190,7 @@ export default function DashboardPage() {
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span>Expiration Date Mapping</span>
                       {verifyKeyData.decryptedData.matchesExpiry ? (
-                        <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-0.5 bg-emerald-500/10 border border-emerald-500/20 px-1 rounded">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-teal-400 flex items-center gap-0.5 bg-teal-500/10 border border-teal-500/20 px-1 rounded">
                           <Check className="h-2.5 w-2.5" /> Matches
                         </span>
                       ) : (
@@ -1198,7 +1208,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="bg-zinc-900/50 p-2 rounded-lg border border-zinc-850">
                         <div className="text-[9px] text-zinc-500 font-medium">Decrypted Key state:</div>
-                        <div className="mt-0.5 text-emerald-450 truncate" title={verifyKeyData.decryptedData.expirationDate}>
+                        <div className="mt-0.5 text-teal-400 truncate" title={verifyKeyData.decryptedData.expirationDate}>
                           {new Date(verifyKeyData.decryptedData.expirationDate).toDateString()}
                         </div>
                       </div>
