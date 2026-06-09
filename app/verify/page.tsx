@@ -1,5 +1,6 @@
 import React from 'react';
 import crypto from 'crypto';
+import zlib from 'zlib';
 import { 
   ShieldCheck, 
   ShieldAlert, 
@@ -36,11 +37,56 @@ interface DecodedReport {
     p: Array<{
       n: string; // parameterName
       v: string; // value
-      u: string; // unit
-      r: string; // refRange
+      u?: string; // unit (optional now)
+      r?: string; // refRange (optional now)
       f: string | null; // flag
     }>;
   }>;
+}
+
+function expandMedicalName(name: string): string {
+  const map: Record<string, string> = {
+    'CBC': 'Complete Blood Count (CBC)',
+    'LFT': 'Liver Function Test (LFT)',
+    'RFT': 'Renal Function Test (RFT)',
+    'Thyroid': 'Thyroid Profile',
+    'Lipid': 'Lipid Profile',
+    'Hb': 'Hemoglobin (Hb)',
+    'RBC': 'Erythrocyte (RBC) Count',
+    'PCV': 'Packed Cell Volume (PCV)',
+    'WBC': 'Total Leucocytes (WBC) Count',
+    'MCV': 'Mean Cell Volume (MCV)',
+    'MCH': 'Mean Cell Haemoglobin (MCH)',
+    'MCHC': 'Mean Corpuscular Hb Concn. (MCHC)',
+    'RDW': 'Red Cell Distribution Width (RDW)',
+    'DLC': 'Differential Leucocyte Count (DLC)',
+    'Platelets': 'Platelet Count',
+    'Neutro': 'Neutrophils',
+    'Lympho': 'Lymphocytes',
+    'Mono': 'Monocytes',
+    'Eosino': 'Eosinophils',
+    'Baso': 'Basophils',
+    'Sugar Fasting': 'Blood Sugar (Fasting)',
+    'Sugar PP': 'Blood Sugar (PP)',
+    'Sugar': 'Blood Sugar',
+    'HbA1c': 'HbA1c (Glycated Hemoglobin)',
+    'eAG': 'Estimated Avg Glucose',
+    'Creatinine': 'Serum Creatinine',
+    'Urea': 'Blood Urea',
+    'Sodium': 'Sodium (Na+)',
+    'Potassium': 'Potassium (K+)',
+    'Chloride': 'Chloride (Cl-)',
+    'Cholesterol': 'Total Cholesterol',
+    'ALP': 'Alkaline Phosphatase',
+    'Bilirubin Total': 'Total Bilirubin',
+    'Bilirubin Direct': 'Direct Bilirubin',
+    'Bilirubin Indirect': 'Indirect Bilirubin',
+    'Protein Total': 'Total Protein',
+    'ALP Total': 'Alkaline Phosphatase',
+    'T3': 'T3 (Triiodothyronine)',
+    'T4': 'T4 (Thyroxine)'
+  };
+  return map[name] || name;
 }
 
 export default async function VerifyPage({ searchParams }: VerifyPageProps) {
@@ -59,12 +105,15 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
     errorMsg = 'Missing cryptographic verification payload or digital signature.';
   } else {
     try {
-      // Recompute signature
-      const expectedSignature = crypto.createHmac('sha256', SECRET_SALT).update(p).digest('hex');
+      // Recompute signature and compare first 16 characters
+      const expectedSignatureFull = crypto.createHmac('sha256', SECRET_SALT).update(p).digest('hex');
+      const expectedSignature = expectedSignatureFull.substring(0, 16);
       isValid = expectedSignature === s;
 
       if (isValid) {
-        const jsonStr = Buffer.from(p, 'base64').toString('utf8');
+        const buffer = Buffer.from(p, 'base64');
+        const decompressed = zlib.inflateSync(buffer);
+        const jsonStr = decompressed.toString('utf8');
         report = JSON.parse(jsonStr);
       } else {
         errorMsg = 'Digital signature mismatch. This document has been tampered with or is fake.';
@@ -196,7 +245,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
                 <div key={tIdx} className="backdrop-blur-md bg-zinc-900/25 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-lg">
                   {/* Test Header */}
                   <div className="bg-zinc-900/60 border-b border-zinc-800/80 px-5 py-3.5">
-                    <h4 className="text-sm font-bold text-zinc-200">{test.n}</h4>
+                    <h4 className="text-sm font-bold text-zinc-200">{expandMedicalName(test.n)}</h4>
                   </div>
 
                   {/* Parameters Table */}
@@ -220,7 +269,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
 
                           return (
                             <tr key={pIdx} className="hover:bg-zinc-900/10 transition-colors">
-                              <td className="py-3 px-5 text-zinc-300 font-semibold">{p.n}</td>
+                              <td className="py-3 px-5 text-zinc-300 font-semibold">{expandMedicalName(p.n)}</td>
                               <td className={`py-3 px-5 font-bold ${isCritical || isHigh ? 'text-red-400' : isLow ? 'text-orange-400' : 'text-zinc-100'}`}>
                                 {p.v}
                               </td>
