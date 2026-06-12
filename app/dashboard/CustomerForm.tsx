@@ -16,6 +16,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
   const [phone, setPhone] = useState('');
   const [machineId, setMachineId] = useState('');
   const [planDuration, setPlanDuration] = useState('1 Year');
+  const [price, setPrice] = useState('0');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,6 +26,12 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
     e.preventDefault();
     if (!labName || !ownerName || !phone || !machineId || !planDuration) {
       setError('Please fill in all fields.');
+      return;
+    }
+
+    const priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      setError('Please enter a valid non-negative price.');
       return;
     }
 
@@ -38,6 +45,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
         phone,
         machineId,
         planDuration,
+        price: priceNum,
       });
 
       if (res.error) {
@@ -52,6 +60,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
         setPhone('');
         setMachineId('');
         setPlanDuration('1 Year');
+        setPrice('0');
         onSuccess();
         onClose();
       }
@@ -189,12 +198,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 id="planDuration"
                 value={planDuration}
                 onChange={(e) => setPlanDuration(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
+                onKeyDown={(e) => handleKeyDown(e, 'price')}
                 className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm transition-all"
                 disabled={loading}
               >
@@ -203,6 +207,31 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
                 <option value="1 Year">1 Year (Standard)</option>
                 <option value="2 Years">2 Years (Premium)</option>
               </select>
+            </div>
+
+            {/* License Price */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1.5">
+                <span className="text-indigo-400 font-bold text-xs">₹</span>
+                License Price (INR)
+              </label>
+              <input
+                id="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="e.g. 15000"
+                className="w-full bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/30 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-sm placeholder-zinc-650 transition-all font-mono"
+                disabled={loading}
+              />
             </div>
 
             {/* Error Message */}

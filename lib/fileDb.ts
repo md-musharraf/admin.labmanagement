@@ -25,6 +25,7 @@ const DEFAULT_CUSTOMERS: Customer[] = [
     expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 25).toISOString(),
     license_key: '',
     status: 'ACTIVE',
+    price: 15000,
   },
   {
     id: 'mock-uuid-2',
@@ -36,6 +37,7 @@ const DEFAULT_CUSTOMERS: Customer[] = [
     expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 300).toISOString(),
     license_key: '',
     status: 'ACTIVE',
+    price: 45000,
   },
   {
     id: 'mock-uuid-3',
@@ -47,6 +49,7 @@ const DEFAULT_CUSTOMERS: Customer[] = [
     expiry_date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
     license_key: '',
     status: 'ACTIVE',
+    price: 0,
   },
 ];
 

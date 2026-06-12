@@ -545,6 +545,7 @@ export default function DashboardPage() {
                           <th className="py-4 px-6 min-w-[140px]">Contact Phone</th>
                           <th className="py-4 px-6 min-w-[170px]">Machine ID</th>
                           <th className="py-4 px-6 min-w-[170px]">Expiry & Access Status</th>
+                          <th className="py-4 px-6 min-w-[120px]">Price (INR)</th>
                           <th className="py-4 px-6 min-w-[310px]">License Key</th>
                           <th className="py-4 px-6 text-right min-w-[185px]">Actions</th>
                         </tr>
@@ -600,6 +601,10 @@ export default function DashboardPage() {
                                     {adminStatus.label}
                                   </span>
                                 </div>
+                              </td>
+
+                              <td className="py-4 px-6 text-zinc-350 font-mono text-xs">
+                                ₹{(customer.price || 0).toLocaleString('en-IN')}
                               </td>
 
                               <td className="py-4 px-6">
@@ -726,11 +731,11 @@ export default function DashboardPage() {
                           </div>
 
                           {/* Grid Metadata */}
-                          <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="grid grid-cols-3 gap-3 text-xs">
                             <div className="space-y-1">
                               <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Phone</div>
                               <a href={`tel:${customer.phone}`} className="flex items-center gap-1 text-zinc-300 hover:text-indigo-400">
-                                <Phone className="h-3 w-3 text-zinc-600" />
+                                <Phone className="h-3 w-3 text-zinc-650" />
                                 {customer.phone}
                               </a>
                             </div>
@@ -743,6 +748,12 @@ export default function DashboardPage() {
                                 {customer.machine_id.length > 18 
                                   ? `${customer.machine_id.substring(0, 8)}...${customer.machine_id.slice(-8)}` 
                                   : customer.machine_id}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Price</div>
+                              <span className="text-zinc-300 font-semibold font-mono">
+                                ₹{(customer.price || 0).toLocaleString('en-IN')}
                               </span>
                             </div>
                           </div>

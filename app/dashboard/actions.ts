@@ -15,6 +15,7 @@ export interface Customer {
   expiry_date: string;
   license_key: string;
   status: string; // 'ACTIVE' | 'PAUSED' | 'STOPPED'
+  price: number;
 }
 
 // Check if we are running in demo mode with dummy credentials
@@ -35,6 +36,10 @@ try {
     }
     if (!c.status) {
       c.status = 'ACTIVE';
+      updated = true;
+    }
+    if (c.price === undefined || c.price === null) {
+      c.price = 0;
       updated = true;
     }
   });
@@ -101,8 +106,9 @@ export async function createCustomer(formData: {
   phone: string;
   machineId: string;
   planDuration: string;
+  price: number;
 }) {
-  const { labName, ownerName, phone, machineId, planDuration } = formData;
+  const { labName, ownerName, phone, machineId, planDuration, price } = formData;
 
   if (!labName || !ownerName || !phone || !machineId || !planDuration) {
     return { error: 'All fields are required' };
@@ -120,6 +126,7 @@ export async function createCustomer(formData: {
   }
   const expiryStr = expiry.toISOString();
   const licenseKey = encrypt(machineId, expiryStr);
+  const validatedPrice = Number(price) || 0;
 
   if (isDemoMode) {
     const list = readCustomers();
@@ -133,6 +140,7 @@ export async function createCustomer(formData: {
       expiry_date: expiryStr,
       license_key: licenseKey,
       status: 'ACTIVE',
+      price: validatedPrice,
     };
     list.push(newCust);
     writeCustomers(list);
@@ -151,7 +159,8 @@ export async function createCustomer(formData: {
           machine_id: machineId,
           expiry_date: expiryStr,
           license_key: licenseKey,
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          price: validatedPrice,
         },
       ])
       .select();
@@ -295,7 +304,8 @@ export async function updateCustomerStatus(id: string, status: 'ACTIVE' | 'PAUSE
           machine_id: dbCust.machine_id,
           expiry_date: dbCust.expiry_date,
           license_key: dbCust.license_key,
-          status: status
+          status: status,
+          price: dbCust.price || 0
         });
         writeCustomers(list);
       }
