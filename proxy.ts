@@ -1,15 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-/**
- * Computes the SHA-256 hash of a string using Web Crypto (Edge-safe).
- */
-async function getExpectedToken(password: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
+import { verifySession } from './lib/session';
 
 /**
  * Next.js 16 Proxy Router for securing administrative routes.
@@ -27,10 +18,17 @@ export async function proxy(request: NextRequest) {
   }
 
   const adminPassword = process.env.ADMIN_PASSWORD || 'pathologyadmin';
-  const expectedToken = await getExpectedToken(adminPassword);
+  const signingSecret = process.env.LICENSE_SECRET_SALT || adminPassword;
 
   const session = request.cookies.get('admin_session')?.value;
-  const isAuthenticated = session === expectedToken;
+  
+  let isAuthenticated = false;
+  if (session) {
+    const payload = await verifySession(session, signingSecret);
+    if (payload) {
+      isAuthenticated = true;
+    }
+  }
 
   // 1. Unauthenticated users trying to access dashboard should be redirected to login (/)
   if (pathname.startsWith('/dashboard') && !isAuthenticated) {

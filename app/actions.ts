@@ -1,20 +1,47 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import crypto from 'crypto';
+import { cookies, headers } from 'next/headers';
+import { signSession } from '@/lib/session';
+
+// In-memory registry to block brute force login attempts
+const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
 
 /**
  * Validates the admin password and sets an HTTP-only session cookie.
  */
 export async function login(password: string) {
+  const headersList = await headers();
+  const ip = headersList.get('x-forwarded-for') || 'unknown';
+  const now = Date.now();
+
+  // Check if IP is currently blocked
+  const record = loginAttempts.get(ip);
+  if (record && record.blockedUntil > now) {
+    const secondsLeft = Math.ceil((record.blockedUntil - now) / 1000);
+    return { error: `Too many login attempts. Please try again in ${secondsLeft} seconds.` };
+  }
+
   const adminPassword = process.env.ADMIN_PASSWORD || 'pathologyadmin';
 
   if (password !== adminPassword) {
-    return { error: 'Invalid admin credentials' };
+    const attempts = record ? record.count + 1 : 1;
+    if (attempts >= 5) {
+      loginAttempts.set(ip, { count: attempts, blockedUntil: now + 5 * 60 * 1000 }); // Block for 5 minutes
+      return { error: 'Invalid admin credentials. Too many failed attempts. You have been blocked for 5 minutes.' };
+    } else {
+      loginAttempts.set(ip, { count: attempts, blockedUntil: 0 });
+      return { error: `Invalid admin credentials. Attempt ${attempts} of 5.` };
+    }
   }
 
-  // Generate SHA-256 hash of the password as the session token
-  const token = crypto.createHash('sha256').update(adminPassword).digest('hex');
+  // Clear failed login attempts upon successful authentication
+  loginAttempts.delete(ip);
+
+  // Generate a cryptographically signed session token valid for 24 hours
+  const expiresAt = now + 1000 * 60 * 60 * 24;
+  const signingSecret = process.env.LICENSE_SECRET_SALT || adminPassword;
+  
+  const token = await signSession({ expiresAt }, signingSecret);
 
   const cookieStore = await cookies();
   cookieStore.set('admin_session', token, {
