@@ -18,7 +18,8 @@ export async function proxy(request: NextRequest) {
   }
 
   const adminPassword = process.env.ADMIN_PASSWORD || 'pathologyadmin';
-  const signingSecret = process.env.LICENSE_SECRET_SALT || adminPassword;
+  // Never the licence salt: it ships inside every desktop install, so anyone could forge a session.
+  const signingSecret = process.env.SESSION_SECRET || adminPassword;
 
   const session = request.cookies.get('admin_session')?.value;
   

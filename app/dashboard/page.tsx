@@ -75,6 +75,7 @@ export default function DashboardPage() {
   const [updateNotes, setUpdateNotes] = useState('');
   const [updateUrl, setUpdateUrl] = useState('');
   const [updateCritical, setUpdateCritical] = useState(false);
+  const [updateSha, setUpdateSha] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateSuccess, setUpdateSuccess] = useState(false);
@@ -204,7 +205,8 @@ export default function DashboardPage() {
         title: updateTitle.trim(),
         releaseNotes: updateNotes.trim(),
         downloadUrl: updateUrl.trim(),
-        isCritical: updateCritical
+        isCritical: updateCritical,
+        sha256: updateSha.trim()
       });
 
       if (res.error) {
@@ -215,6 +217,7 @@ export default function DashboardPage() {
         setUpdateTitle('');
         setUpdateNotes('');
         setUpdateUrl('');
+        setUpdateSha('');
         setUpdateCritical(false);
         await loadData();
       }
@@ -941,6 +944,21 @@ export default function DashboardPage() {
                       <LinkIcon className="h-3.5 w-3.5 text-zinc-550" />
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <label htmlFor="updateSha" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                    Installer SHA-256 (recommended)
+                  </label>
+                  <input
+                    id="updateSha"
+                    type="text"
+                    value={updateSha}
+                    onChange={(e) => setUpdateSha(e.target.value)}
+                    placeholder="certutil -hashfile &quot;JharLab Setup.exe&quot; SHA256"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 rounded-xl py-2.5 px-3.5 outline-none text-zinc-100 text-xs font-mono placeholder-zinc-650 transition-all"
+                  />
+                  <p className="mt-1.5 text-[11px] text-zinc-500">Labs refuse a download whose hash doesn&apos;t match, so a swapped file is never installed.</p>
                 </div>
 
                 <div className="flex items-center gap-2.5 py-1">

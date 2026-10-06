@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("customers")
       .select("*")
-      .eq("machine_id", machineId)
+      // Case-insensitive exact match (LIKE wildcards escaped), tolerant of how the ID was pasted.
+      .ilike("machine_id", machineId.trim().replace(/[\\%_]/g, (c) => `\\${c}`))
       .maybeSingle();
 
     if (error) {

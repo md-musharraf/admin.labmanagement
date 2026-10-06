@@ -39,7 +39,8 @@ export async function login(password: string) {
 
   // Generate a cryptographically signed session token valid for 24 hours
   const expiresAt = now + 1000 * 60 * 60 * 24;
-  const signingSecret = process.env.LICENSE_SECRET_SALT || adminPassword;
+  // Never the licence salt: it ships inside every desktop install, so anyone could forge a session.
+  const signingSecret = process.env.SESSION_SECRET || adminPassword;
   
   const token = await signSession({ expiresAt }, signingSecret);
 

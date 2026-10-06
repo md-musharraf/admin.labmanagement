@@ -9,6 +9,30 @@ export interface SoftwareUpdate {
   downloadUrl: string;
   isCritical: boolean;
   publishedAt: string;
+  sha256?: string | null;
+}
+
+// Row of the Supabase `app_updates` table -> the shape the dashboard and desktop app use.
+interface AppUpdateRow {
+  version: string;
+  title: string;
+  release_notes: string;
+  download_url: string;
+  is_critical: boolean | null;
+  published_at: string;
+  sha256: string | null;
+}
+
+export function toSoftwareUpdate(row: AppUpdateRow): SoftwareUpdate {
+  return {
+    version: row.version,
+    title: row.title,
+    releaseNotes: row.release_notes,
+    downloadUrl: row.download_url,
+    isCritical: !!row.is_critical,
+    publishedAt: row.published_at,
+    sha256: row.sha256 || null,
+  };
 }
 
 const CUSTOMERS_FILE = path.join(process.cwd(), 'customers_db.json');

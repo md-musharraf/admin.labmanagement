@@ -3,7 +3,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { encrypt, decrypt } from '@/lib/keygen';
 import { revalidatePath } from 'next/cache';
-import { readCustomers, writeCustomers, readUpdates, writeUpdates, SoftwareUpdate } from '@/lib/fileDb';
+import { readCustomers, writeCustomers, readUpdates, writeUpdates, SoftwareUpdate, toSoftwareUpdate } from '@/lib/fileDb';
 
 export interface Customer {
   id: string;
@@ -108,7 +108,9 @@ export async function createCustomer(formData: {
   planDuration: string;
   price: number;
 }) {
-  const { labName, ownerName, phone, machineId, planDuration, price } = formData;
+  const { labName, ownerName, phone, planDuration, price } = formData;
+  // The desktop compares machine IDs exactly; a pasted trailing space/newline would make the key useless.
+  const machineId = formData.machineId?.trim();
 
   if (!labName || !ownerName || !phone || !machineId || !planDuration) {
     return { error: 'All fields are required' };
@@ -181,7 +183,8 @@ export async function createCustomer(formData: {
 /**
  * Renews a customer's license by extending it by 1 year and regenerating the key.
  */
-export async function renewLicense(id: string, machineId: string) {
+export async function renewLicense(id: string, rawMachineId: string) {
+  const machineId = rawMachineId?.trim();
   if (!id || !machineId) {
     return { error: 'Customer ID and Machine ID are required' };
   }
@@ -356,10 +359,35 @@ export async function pushSoftwareUpdate(formData: {
   releaseNotes: string;
   downloadUrl: string;
   isCritical: boolean;
+  sha256?: string;
 }) {
   const { version, title, releaseNotes, downloadUrl, isCritical } = formData;
+  const sha256 = formData.sha256?.trim().toLowerCase() || null;
   if (!version || !title || !releaseNotes || !downloadUrl) {
     return { error: 'All update fields are required' };
+  }
+  if (!/^\d+\.\d+\.\d+$/.test(version)) {
+    return { error: 'Version must look like 1.2.0' };
+  }
+  if (!/^https:\/\//i.test(downloadUrl)) {
+    return { error: 'The desktop app only installs updates downloaded over https://' };
+  }
+  if (sha256 && !/^[0-9a-f]{64}$/.test(sha256)) {
+    return { error: 'SHA-256 must be 64 hex characters (certutil -hashfile Setup.exe SHA256)' };
+  }
+
+  if (!isDemoMode) {
+    const { data, error } = await supabase
+      .from('app_updates')
+      .insert([{ version, title, release_notes: releaseNotes, download_url: downloadUrl, is_critical: isCritical, sha256 }])
+      .select()
+      .single();
+    if (error) {
+      console.error('Supabase error saving update:', error);
+      return { error: `Update not saved: ${error.message}. Run supabase/app_updates.sql once in the Supabase SQL editor.` };
+    }
+    revalidatePath('/dashboard');
+    return { success: true, data: toSoftwareUpdate(data) };
   }
 
   try {
@@ -387,6 +415,11 @@ export async function pushSoftwareUpdate(formData: {
  * Fetches all updates.
  */
 export async function fetchSoftwareUpdates() {
+  if (!isDemoMode) {
+    const { data, error } = await supabase.from('app_updates').select('*').order('published_at', { ascending: false });
+    if (error) return { error: `${error.message}. Run supabase/app_updates.sql once in the Supabase SQL editor.` };
+    return { success: true, data: (data || []).map(toSoftwareUpdate) };
+  }
   try {
     const updates = readUpdates();
     return { success: true, data: updates };
