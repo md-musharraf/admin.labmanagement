@@ -15,6 +15,7 @@ import {
   Customer 
 } from './actions';
 import CustomerForm from './CustomerForm';
+import { PRODUCTS, toProduct } from '@/lib/products';
 import { 
   Activity, 
   LogOut, 
@@ -89,6 +90,7 @@ export default function DashboardPage() {
       expirationDate: string;
       matchesMachine: boolean;
       matchesExpiry: boolean;
+      product: string;
       isValid: boolean;
     };
     error?: string;
@@ -141,7 +143,7 @@ export default function DashboardPage() {
   const handleRenew = async (customer: Customer) => {
     try {
       setLoading(true);
-      const res = await renewLicense(customer.id, customer.machine_id);
+      const res = await renewLicense(customer.id, customer.machine_id, customer.product);
       if (res.error) {
         alert(`Failed to renew license: ${res.error}`);
       } else {
@@ -259,6 +261,8 @@ export default function DashboardPage() {
           
           const matchesMachine = res.machineId === customer.machine_id;
           const matchesExpiry = dbExpiryDate === decryptedExpiryDate;
+          // A key made for the other app would be refused by this customer's software.
+          const matchesProduct = res.product === toProduct(customer.product);
           
           setVerifyKeyData({
             customer,
@@ -268,7 +272,8 @@ export default function DashboardPage() {
               expirationDate: res.expirationDate,
               matchesMachine,
               matchesExpiry,
-              isValid: matchesMachine && matchesExpiry
+              product: res.product,
+              isValid: matchesMachine && matchesExpiry && matchesProduct
             }
           });
         }
@@ -340,7 +345,8 @@ export default function DashboardPage() {
       c.lab_name.toLowerCase().includes(query) ||
       c.owner_name.toLowerCase().includes(query) ||
       c.phone.includes(query) ||
-      c.machine_id.toLowerCase().includes(query);
+      c.machine_id.toLowerCase().includes(query) ||
+      PRODUCTS[toProduct(c.product)].label.toLowerCase().includes(query);
 
     return matchesStatus && matchesSearch;
   });
@@ -489,7 +495,7 @@ export default function DashboardPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by Lab Name, Owner, Phone or Machine ID..."
+                  placeholder="Search by name, owner, phone, machine ID or software..."
                   className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/45 rounded-xl py-2.5 pl-10 pr-4 outline-none text-zinc-100 placeholder-zinc-650 transition-all text-sm shadow-inner hover:border-zinc-700"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -563,7 +569,7 @@ export default function DashboardPage() {
                           return (
                             <tr key={customer.id} className="hover:bg-zinc-900/20 transition-colors">
                               <td className="py-4 px-6">
-                                <div className="font-bold text-zinc-100">{customer.lab_name}</div>
+                                <div className="font-bold text-zinc-100">{customer.lab_name}<span className={`ml-2 inline-block align-middle text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded ${toProduct(customer.product) === 'medbilling' ? 'bg-teal-500/15 text-teal-300' : 'bg-indigo-500/15 text-indigo-300'}`}>{PRODUCTS[toProduct(customer.product)].short}</span></div>
                                 <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
                                   <User className="h-3 w-3" />
                                   {customer.owner_name}
@@ -717,7 +723,7 @@ export default function DashboardPage() {
                           {/* Lab Title and Status Badges */}
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <h4 className="font-bold text-zinc-100 text-sm">{customer.lab_name}</h4>
+                              <h4 className="font-bold text-zinc-100 text-sm">{customer.lab_name}<span className={`ml-2 inline-block align-middle text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded ${toProduct(customer.product) === 'medbilling' ? 'bg-teal-500/15 text-teal-300' : 'bg-indigo-500/15 text-indigo-300'}`}>{PRODUCTS[toProduct(customer.product)].short}</span></h4>
                               <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
                                 <User className="h-3 w-3 text-zinc-650" />
                                 {customer.owner_name}
@@ -1248,6 +1254,7 @@ export default function DashboardPage() {
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-1">Payload Format Decoded</div>
                     <div className="font-mono text-[10px] bg-zinc-900 p-2 rounded border border-zinc-800 text-indigo-400 break-all select-all">
                       {`${verifyKeyData.decryptedData.machineId}|${verifyKeyData.decryptedData.expirationDate}`}
+                      {PRODUCTS[toProduct(verifyKeyData.decryptedData.product)].tag && `|${PRODUCTS[toProduct(verifyKeyData.decryptedData.product)].tag}`}
                     </div>
                   </div>
                 </div>

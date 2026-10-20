@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { createCustomer } from './actions';
-import { X, Plus, Activity, User, Phone, Cpu, Calendar, AlertTriangle } from 'lucide-react';
+import { X, Plus, Activity, User, Phone, Cpu, Calendar, AlertTriangle, Package } from 'lucide-react';
+import { PRODUCTS, type Product } from '@/lib/products';
 
 interface CustomerFormProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CustomerFormProps {
 }
 
 export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFormProps) {
+  const [product, setProduct] = useState<Product>('pathlab');
   const [labName, setLabName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -46,6 +48,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
         machineId,
         planDuration,
         price: priceNum,
+        product,
       });
 
       if (res.error) {
@@ -61,6 +64,7 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
         setMachineId('');
         setPlanDuration('1 Year');
         setPrice('0');
+        setProduct('pathlab');
         onSuccess();
         onClose();
       }
@@ -101,10 +105,10 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
             <div>
               <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
                 <Plus className="h-5 w-5 text-indigo-400" />
-                Register New Lab
+                Register New Customer
               </h2>
               <p className="text-xs text-zinc-400 mt-1">
-                Enter details to auto-generate LIS license key
+                Pick the software, then a licence key is made for that app only
               </p>
             </div>
             <button 
@@ -116,11 +120,38 @@ export default function CustomerForm({ isOpen, onClose, onSuccess }: CustomerFor
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Software */}
+            <div>
+              <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1.5">
+                <Package className="h-3.5 w-3.5 text-indigo-400" />
+                Software
+              </span>
+              <div role="radiogroup" aria-label="Software" className="grid grid-cols-2 gap-2">
+                {(Object.keys(PRODUCTS) as Product[]).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    role="radio"
+                    aria-checked={product === p}
+                    onClick={() => setProduct(p)}
+                    disabled={loading}
+                    className={`rounded-xl border py-2.5 px-3 text-sm font-semibold transition-all cursor-pointer ${
+                      product === p
+                        ? 'border-indigo-500 bg-indigo-500/15 text-indigo-200'
+                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    {PRODUCTS[p].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Lab Name */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5 text-indigo-400" />
-                Laboratory Name
+                {product === 'medbilling' ? 'Clinic Name' : 'Laboratory Name'}
               </label>
               <input
                 id="labName"

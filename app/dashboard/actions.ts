@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabaseClient';
 import { encrypt, decrypt } from '@/lib/keygen';
+import { toProduct, type Product } from '@/lib/products';
 import { revalidatePath } from 'next/cache';
 import { readCustomers, writeCustomers, readUpdates, writeUpdates, SoftwareUpdate, toSoftwareUpdate } from '@/lib/fileDb';
 
@@ -16,6 +17,7 @@ export interface Customer {
   license_key: string;
   status: string; // 'ACTIVE' | 'PAUSED' | 'STOPPED'
   price: number;
+  product?: Product; // missing on rows made before MedBilling existed = 'pathlab'
 }
 
 // Check if we are running in demo mode with dummy credentials
@@ -31,7 +33,7 @@ try {
   let updated = false;
   current.forEach((c) => {
     if (!c.license_key) {
-      c.license_key = encrypt(c.machine_id, c.expiry_date);
+      c.license_key = encrypt(c.machine_id, c.expiry_date, toProduct(c.product));
       updated = true;
     }
     if (!c.status) {
@@ -63,7 +65,7 @@ export async function checkDemoMode() {
 export async function fetchCustomers() {
   if (isDemoMode) {
     const list = readCustomers();
-    const sorted = [...list].sort(
+    const sorted = list.map((c) => ({ ...c, product: toProduct(c.product) })).sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
     return { success: true, data: sorted, isDemo: true };
@@ -86,7 +88,8 @@ export async function fetchCustomers() {
       const fileCust = fileList.find(fc => fc.id === c.id || fc.machine_id === c.machine_id);
       return {
         ...c,
-        status: c.status || fileCust?.status || 'ACTIVE'
+        status: c.status || fileCust?.status || 'ACTIVE',
+        product: toProduct(c.product),
       };
     }) as Customer[];
 
@@ -107,8 +110,10 @@ export async function createCustomer(formData: {
   machineId: string;
   planDuration: string;
   price: number;
+  product: Product;
 }) {
   const { labName, ownerName, phone, planDuration, price } = formData;
+  const product = toProduct(formData.product);
   // The desktop compares machine IDs exactly; a pasted trailing space/newline would make the key useless.
   const machineId = formData.machineId?.trim();
 
@@ -127,7 +132,7 @@ export async function createCustomer(formData: {
     expiry.setFullYear(expiry.getFullYear() + 1);
   }
   const expiryStr = expiry.toISOString();
-  const licenseKey = encrypt(machineId, expiryStr);
+  const licenseKey = encrypt(machineId, expiryStr, product);
   const validatedPrice = Number(price) || 0;
 
   if (isDemoMode) {
@@ -143,6 +148,7 @@ export async function createCustomer(formData: {
       license_key: licenseKey,
       status: 'ACTIVE',
       price: validatedPrice,
+      product,
     };
     list.push(newCust);
     writeCustomers(list);
@@ -163,12 +169,17 @@ export async function createCustomer(formData: {
           license_key: licenseKey,
           status: 'ACTIVE',
           price: validatedPrice,
+          // JharLab rows are written as before, so they keep working before supabase/customers_product.sql is run.
+          ...(product !== 'pathlab' && { product }),
         },
       ])
       .select();
 
     if (error) {
       console.error('Supabase error inserting customer:', error);
+      if (/product|duplicate|unique/i.test(error.message)) {
+        return { error: `${error.message}. Run supabase/customers_product.sql once in the Supabase SQL editor.` };
+      }
       return { error: error.message };
     }
 
@@ -183,7 +194,7 @@ export async function createCustomer(formData: {
 /**
  * Renews a customer's license by extending it by 1 year and regenerating the key.
  */
-export async function renewLicense(id: string, rawMachineId: string) {
+export async function renewLicense(id: string, rawMachineId: string, product?: Product) {
   const machineId = rawMachineId?.trim();
   if (!id || !machineId) {
     return { error: 'Customer ID and Machine ID are required' };
@@ -192,7 +203,7 @@ export async function renewLicense(id: string, rawMachineId: string) {
   const expiry = new Date();
   expiry.setFullYear(expiry.getFullYear() + 1);
   const expiryStr = expiry.toISOString();
-  const licenseKey = encrypt(machineId, expiryStr);
+  const licenseKey = encrypt(machineId, expiryStr, toProduct(product));
 
   if (isDemoMode) {
     const list = readCustomers();
@@ -308,7 +319,8 @@ export async function updateCustomerStatus(id: string, status: 'ACTIVE' | 'PAUSE
           expiry_date: dbCust.expiry_date,
           license_key: dbCust.license_key,
           status: status,
-          price: dbCust.price || 0
+          price: dbCust.price || 0,
+          product: toProduct(dbCust.product),
         });
         writeCustomers(list);
       }
@@ -344,7 +356,7 @@ export async function updateCustomerStatus(id: string, status: 'ACTIVE' | 'PAUSE
 export async function verifyLicenseKey(licenseKey: string) {
   try {
     const decrypted = decrypt(licenseKey);
-    return { success: true, machineId: decrypted.machineId, expirationDate: decrypted.expirationDate };
+    return { success: true, machineId: decrypted.machineId, expirationDate: decrypted.expirationDate, product: decrypted.product };
   } catch (err: any) {
     return { error: err.message || 'Verification failed: invalid key structure' };
   }
